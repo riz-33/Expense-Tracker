@@ -1,5 +1,5 @@
 
-export const Accounts = () => {
+export const AccountsPage = () => {
   return (
     <div>Accounts</div>
   )

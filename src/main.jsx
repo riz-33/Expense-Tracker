@@ -6,7 +6,7 @@ import { createRoot } from "react-dom/client";
 import "./index.css";
 import { DashboardPage } from "./pages/DashboardPage";
 import { AccountsPage } from "./pages/AccountsPage";
-import { TransactionsPage } from "./pages/TransactionsPage";
+import TransactionsPage from "./pages/TransactionsPage";
 import { ReportsPage } from "./pages/ReportsPage";
 
 const router = createBrowserRouter([
@@ -22,12 +22,12 @@ const router = createBrowserRouter([
             Component: DashboardPage,
           },
           {
-            path: "/accounts",
-            Component: AccountsPage,
-          },
-          {
             path: "/transactions",
             Component: TransactionsPage,
+          },
+          {
+            path: "/accounts",
+            Component: AccountsPage,
           },
           {
             path: "/reports",

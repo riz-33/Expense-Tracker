@@ -16,14 +16,14 @@ const NAVIGATION = [
     icon: <DashboardIcon />,
   },
   {
-    segment: "accounts",
-    title: "Accounts",
-    icon: <AccountBalanceWalletIcon />,
-  },
-  {
     segment: "transactions",
     title: "Transactions",
     icon: <SyncAltIcon />,
+  },
+  {
+    segment: "accounts",
+    title: "Accounts",
+    icon: <AccountBalanceWalletIcon />,
   },
   {
     segment: "reports",
@@ -36,8 +36,8 @@ const BRANDING = {
   title: "Expense Tracker",
   logo: (
     <img
-    style={{marginTop: "2px"}}
-    width={30}
+      style={{ marginTop: "2px" }}
+      width={30}
       src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSIqZtQoN6Rc8uqzVE_qSNobffTp4r8FwlMyA&s"
       alt="logo"
     />

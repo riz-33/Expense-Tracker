@@ -1,6 +1,4 @@
 import { styled } from "@mui/material/styles";
-import Paper from "@mui/material/Paper";
-import Grid from "@mui/material/Grid";
 import React from "react";
 import Chart from "react-google-charts";
 import {
@@ -9,6 +7,8 @@ import {
   Card,
   CardActions,
   CardContent,
+  Grid,
+  Paper,
   Table,
   TableBody,
   TableCell,
@@ -19,132 +19,101 @@ import {
   Typography,
 } from "@mui/material";
 
-const Item = styled(Paper)(({ theme }) => ({
-  backgroundColor: "#fff",
-  ...theme.typography.body2,
-  padding: theme.spacing(1),
-  textAlign: "center",
-  color: theme.palette.text.secondary,
-  ...theme.applyStyles("dark", {
-    backgroundColor: "#1A2027",
-  }),
-}));
-
-const bull = (
-  <Box
-    component="span"
-    sx={{ display: "inline-block", mx: "2px", transform: "scale(0.8)" }}
-  >
-    •
-  </Box>
-);
-
-const card = (
-  <React.Fragment>
-    <CardContent>
-      <Typography gutterBottom sx={{ color: "text.secondary", fontSize: 14 }}>
-        Word of the Day
-      </Typography>
-      <Typography variant="h5" component="div">
-        be{bull}nev{bull}o{bull}lent
-      </Typography>
-      <Typography sx={{ color: "text.secondary", mb: 1.5 }}>
-        adjective
-      </Typography>
-      <Typography variant="body2">
-        well meaning and kindly.
-        <br />
-        {'"a benevolent smile"'}
-      </Typography>
-    </CardContent>
-    <CardActions>
-      <Button size="small">Learn More</Button>
-    </CardActions>
-  </React.Fragment>
-);
-
 const data = [
-  ["Language", "Speakers (in millions)"],
-  ["German", 5.85],
-  ["French", 1.66],
-  ["Italian", 0.316],
-  ["Romansh", 0.0791],
+  ["Summary", "Income & Expenses"],
+  ["Income", 50000],
+  ["Expense", 30000],
 ];
 
 const dataNew = [
-  ["Name", "Popularity"],
-  ["Cesar", 370],
-  ["Rachel", 600],
-  ["Patrick", 700],
-  ["Eric", 1500],
+  ["Name", "Expenses"],
+  ["Housing", 370],
+  ["Food", 600],
+  ["Transportation", 700],
+  ["Health", 1500],
+  ["Kids", 370],
+  ["Personal Care", 600],
+  ["Clothing", 700],
+  ["Gifts", 1500],
+  ["Savings", 370],
+  ["Debt Payments", 600],
 ];
 
 const data3 = [
-  ["Year", "Sales", "Expenses"],
-  ["2004", 1000, 400],
-  ["2005", 1170, 460],
-  ["2006", 660, 1120],
-  ["2007", 1030, 540],
+  ["Month", "Income", "Expense"],
+  ["Jan", 1000, 400],
+  ["Feb", 1170, 460],
+  ["Mar", 660, 1120],
+  ["Apr", 1030, 540],
+  ["May", 1000, 400],
+  ["Jun", 1170, 460],
+  ["Jul", 660, 1120],
+  ["Aug", 1030, 540],
+  ["Sep", 1000, 400],
+  ["Oct", 1170, 460],
+  ["Nov", 660, 1120],
+  ["Dec", 1030, 540],
 ];
 
 const options = {
-  title: "Company Performance",
+  title: "Monthly Summary",
   curveType: "function",
   legend: { position: "bottom" },
 };
 
 const columns = [
-  { id: "name", label: "Name", minWidth: 170 },
-  { id: "code", label: "ISO\u00a0Code", minWidth: 100 },
-  {
-    id: "population",
-    label: "Population",
-    minWidth: 170,
-    align: "right",
-    format: (value) => value.toLocaleString("en-US"),
-  },
-  {
-    id: "size",
-    label: "Size\u00a0(km\u00b2)",
-    minWidth: 170,
-    align: "right",
-    format: (value) => value.toLocaleString("en-US"),
-  },
-  {
-    id: "density",
-    label: "Density",
-    minWidth: 170,
-    align: "right",
-    format: (value) => value.toFixed(2),
-  },
+  { id: "date", label: "Date", minWidth: 120 },
+  { id: "name", label: "Name", minWidth: 80, align: "left" },
+  { id: "amount", label: "Amount", minWidth: 80, align: "center" },
+  { id: "category", label: "Category", minWidth: 120, align: "left" },
+  { id: "account", label: "Account", minWidth: 120, align: "left" },
+  { id: "comments", label: "Comments", minWidth: 170, align: "left" },
 ];
 
-function createData(name, code, population, size) {
-  const density = population / size;
-  return { name, code, population, size, density };
+function createData(name, amount, date, category, account, comments) {
+  // const density = population / size;
+  return { name, amount, date, category, account, comments };
 }
 
 const rows = [
-  createData("India", "IN", 1324171354, 3287263),
-  createData("China", "CN", 1403500365, 9596961),
-  createData("Italy", "IT", 60483973, 301340),
-  createData("United States", "US", 327167434, 9833520),
-  createData("Canada", "CA", 37602103, 9984670),
-  createData("Australia", "AU", 25475400, 7692024),
-  createData("Germany", "DE", 83019200, 357578),
-  createData("Ireland", "IE", 4857000, 70273),
-  createData("Mexico", "MX", 126577691, 1972550),
-  createData("Japan", "JP", 126317000, 377973),
-  createData("France", "FR", 67022000, 640679),
-  createData("United Kingdom", "GB", 67545757, 242495),
-  createData("Russia", "RU", 146793744, 17098246),
-  createData("Nigeria", "NG", 200962417, 923768),
-  createData("Brazil", "BR", 210147125, 8515767),
+  createData(
+    "Grocery",
+    "20,000",
+    "Tue 21 Jan 2025",
+    "Housing",
+    "Card",
+    "Monthly Grocery"
+  ),
+  createData("Eggs", "500", "Wed 22 Jan 2025", "Food", "Cash", "Eggs"),
+  createData(
+    "Fuel",
+    "1,000",
+    "Thu 23 Jan 2025",
+    "Transportation",
+    "Card",
+    "Fuel"
+  ),
+  createData(
+    "Hospital",
+    "2,000",
+    "Fri 24 Jan 2025",
+    "Health",
+    "Card",
+    "Routine Checkup"
+  ),
+  createData(
+    "Formal",
+    "8,000",
+    "Sat 25 Jan 2025",
+    "Clothing",
+    "Cash",
+    "Pent Shirt"
+  ),
 ];
 
 export const DashboardPage = () => {
   const [page, setPage] = React.useState(0);
-  const [rowsPerPage, setRowsPerPage] = React.useState(10);
+  const [rowsPerPage, setRowsPerPage] = React.useState(5);
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -158,77 +127,153 @@ export const DashboardPage = () => {
   return (
     <div>
       <div className="group-1">
-        <Grid padding={2} container rowSpacing={2} columnSpacing={2}>
+        <Grid marginTop={3} padding={2} container columnSpacing={5}>
           <Grid item xs={3}>
-            <Box>
-              <Card variant="outlined">{card}</Card>
-            </Box>
+            <Card
+              style={{
+                height: 150,
+                alignItems: "center",
+                justifyContent: "center",
+                display: "flex",
+              }}
+            >
+              <CardContent style={{ textAlign: "center" }}>
+                <Typography
+                  gutterBottom
+                  sx={{ color: "text.secondary", fontSize: 20, mb: 2 }}
+                >
+                  Total Balance
+                </Typography>
+                <Typography variant="h4" component="div">
+                  Rs.20,000
+                </Typography>
+              </CardContent>
+            </Card>
           </Grid>
           <Grid item xs={3}>
-            <Box>
-              <Card variant="outlined">{card}</Card>
-            </Box>
+            <Card
+              style={{
+                height: 150,
+                alignItems: "center",
+                justifyContent: "center",
+                display: "flex",
+              }}
+            >
+              <CardContent style={{ textAlign: "center" }}>
+                <Typography
+                  gutterBottom
+                  sx={{ color: "text.secondary", fontSize: 20, mb: 2 }}
+                >
+                  Total Income
+                </Typography>
+                <Typography variant="h4" component="div">
+                  Rs.50,000
+                </Typography>
+              </CardContent>
+            </Card>
           </Grid>
           <Grid item xs={3}>
-            <Box>
-              <Card variant="outlined">{card}</Card>
-            </Box>
+            <Card
+              style={{
+                height: 150,
+                alignItems: "center",
+                justifyContent: "center",
+                display: "flex",
+              }}
+            >
+              <CardContent style={{ textAlign: "center" }}>
+                <Typography
+                  gutterBottom
+                  sx={{ color: "text.secondary", fontSize: 20, mb: 2 }}
+                >
+                  Total Expense
+                </Typography>
+                <Typography variant="h4" component="div">
+                  Rs.30,000
+                </Typography>
+              </CardContent>
+            </Card>
           </Grid>
           <Grid item xs={3}>
-            <Box>
-              <Card variant="outlined">{card}</Card>
-            </Box>
+            <Card
+              style={{
+                height: 150,
+                alignItems: "center",
+                justifyContent: "center",
+                display: "flex",
+              }}
+            >
+              <CardContent style={{ textAlign: "center" }}>
+                <Typography
+                  gutterBottom
+                  sx={{ color: "text.secondary", fontSize: 20, mb: 2 }}
+                >
+                  Month
+                </Typography>
+                <Typography variant="h4" component="div">
+                  Jan 2025
+                </Typography>
+              </CardContent>
+            </Card>
           </Grid>
         </Grid>
       </div>
+
       <div className="group-2">
-        <Grid padding={2} container rowSpacing={2} columnSpacing={2}>
+        <Grid padding={2} container columnSpacing={4}>
           <Grid item xs={6}>
-            <Chart
-              chartType="PieChart"
-              data={data}
-              width={"100%"}
-              height={"400px"}
-              options={{
-                title: "Company Performance",
-                legend: { position: "bottom" },
-                animation: {
-                  duration: 1000,
-                  easing: "out",
-                },
-              }}
-            />
+            <Card>
+              <Chart
+                chartType="PieChart"
+                data={data}
+                width={"100%"}
+                height={"400px"}
+                options={{
+                  title: "Summary",
+                  legend: { position: "bottom" },
+                  animation: {
+                    duration: 1000,
+                    easing: "out",
+                  },
+                }}
+              />
+            </Card>
           </Grid>
           <Grid item xs={6}>
-            <Chart
-              chartType="ColumnChart"
-              width="100%"
-              height="400px"
-              data={dataNew}
-            />
+            <Card>
+              <Chart
+                chartType="ColumnChart"
+                width="100%"
+                height="400px"
+                data={dataNew}
+              />
+            </Card>
           </Grid>
         </Grid>
       </div>
       <div className="group-3">
-        <Grid padding={2} container rowSpacing={2} columnSpacing={2}>
+        <Grid padding={2} container>
           <Grid item xs={12}>
-            <Chart
-              chartType="LineChart"
-              width="100%"
-              height="400px"
-              data={data3}
-              options={options}
-            />
+            <Card>
+              <Chart
+                chartType="LineChart"
+                width="100%"
+                height="400px"
+                data={data3}
+                options={options}
+              />
+            </Card>
           </Grid>
         </Grid>
       </div>
+
       <div className="group-4">
-        <Grid padding={2} container rowSpacing={2} columnSpacing={2}>
+        <Grid padding={2} container>
           <Grid item xs={12}>
             <Card variant="outlined">
               <CardContent>
                 <Typography variant="h5" component="div">
-                  Summary
+                  Detail Summary
                 </Typography>
                 <Paper sx={{ width: "100%", overflow: "hidden" }}>
                   <TableContainer sx={{ maxHeight: 440 }}>

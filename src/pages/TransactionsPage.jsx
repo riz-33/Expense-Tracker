@@ -2,12 +2,19 @@ import * as React from "react";
 import PropTypes from "prop-types";
 import { alpha } from "@mui/material/styles";
 import { visuallyHidden } from "@mui/utils";
+import DeleteIcon from "@mui/icons-material/DeleteRounded";
+// import FilterListIcon from "@mui/icons-material/FilterList";
+import AddBoxIcon from "@mui/icons-material/AddBox";
+import ModeEditIcon from "@mui/icons-material/ModeEdit";
+import dayjs from "dayjs";
+import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import {
   Box,
-  CardContent,
   Card,
   Typography,
-  Button,
   Grid,
   Paper,
   Table,
@@ -22,12 +29,8 @@ import {
   Checkbox,
   IconButton,
   Tooltip,
-  FormControlLabel,
-  Switch,
-  // DeleteIcon,
-  // FilterListIcon,
+  Button,
 } from "@mui/material";
-import DeleteIcon from "@mui/icons-material/DeleteRounded";
 
 function createData(id, name, amount, date, category, account, comments) {
   return {
@@ -267,17 +270,26 @@ function EnhancedTableToolbar(props) {
           variant="h6"
           id="tableTitle"
           component="div"
-        ></Typography>
+        >
+          Transactions Activity
+        </Typography>
       )}
       {numSelected > 0 ? (
-        <Tooltip title="Delete">
-          <IconButton>
-            <DeleteIcon />
+        <React.Fragment>
+          <Tooltip title="Edit">
+            <IconButton>
+              <ModeEditIcon />
             </IconButton>
-        </Tooltip>
+          </Tooltip>
+          <Tooltip title="Delete">
+            <IconButton>
+              <DeleteIcon />
+            </IconButton>
+          </Tooltip>
+        </React.Fragment>
       ) : (
-        <Tooltip title="Filter list">
-          <IconButton>{/* <FilterListIcon /> */}</IconButton>
+        <Tooltip title="Add Expense">
+          <IconButton>{<AddBoxIcon />}</IconButton>
         </Tooltip>
       )}
     </Toolbar>
@@ -293,7 +305,7 @@ export default function TransactionsPage() {
   const [orderBy, setOrderBy] = React.useState("calories");
   const [selected, setSelected] = React.useState([]);
   const [page, setPage] = React.useState(0);
-  const [rowsPerPage, setRowsPerPage] = React.useState(5);
+  const [rowsPerPage, setRowsPerPage] = React.useState(10);
 
   const handleRequestSort = (event, property) => {
     const isAsc = orderBy === property && order === "asc";
@@ -351,204 +363,109 @@ export default function TransactionsPage() {
   );
 
   return (
-    <Grid marginTop={3} padding={2} container>
-      <Grid item xs={12}>
-        <Card sx={{ minWidth: 275 }}>
-          <CardContent>
-            <Typography variant="h5" component="div">
-              Transactions Activity
-            </Typography>
-          </CardContent>
+    <div>
+      <div>
+        <Grid marginTop={3} container columnSpacing={2}>
+          <Grid item xs={6}></Grid>
+          <Grid item xs={2}>
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <DemoContainer components={["DatePicker"]}>
+                <DatePicker label="Start Date" />
+              </DemoContainer>
+            </LocalizationProvider>
+          </Grid>
+          <Grid item xs={2}>
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <DemoContainer components={["DatePicker"]}>
+                <DatePicker label="End Date" />
+              </DemoContainer>
+            </LocalizationProvider>
+          </Grid>
+          <Grid item xs={2} marginTop={2}>
+            <Button variant="contained">Search</Button>
+          </Grid>
+        </Grid>
+      </div>
 
-          <Box sx={{ width: "100%" }}>
-            <Paper sx={{ width: "100%", mb: 2 }}>
-              <EnhancedTableToolbar numSelected={selected.length} />
-              <TableContainer>
-                <Table sx={{ minWidth: 750 }} aria-labelledby="tableTitle">
-                  <EnhancedTableHead
-                    numSelected={selected.length}
-                    order={order}
-                    orderBy={orderBy}
-                    onSelectAllClick={handleSelectAllClick}
-                    onRequestSort={handleRequestSort}
-                    rowCount={rows.length}
-                  />
-                  <TableBody>
-                    {visibleRows.map((row, index) => {
-                      const isItemSelected = selected.includes(row.id);
-                      const labelId = `enhanced-table-checkbox-${index}`;
+      <Grid padding={2} container>
+        <Grid item xs={12}>
+          <Card sx={{ minWidth: 275 }}>
+            <Box sx={{ width: "100%" }}>
+              <Paper sx={{ width: "100%", mb: 2 }}>
+                <EnhancedTableToolbar numSelected={selected.length} />
+                <TableContainer>
+                  <Table sx={{ minWidth: 750 }} aria-labelledby="tableTitle">
+                    <EnhancedTableHead
+                      numSelected={selected.length}
+                      order={order}
+                      orderBy={orderBy}
+                      onSelectAllClick={handleSelectAllClick}
+                      onRequestSort={handleRequestSort}
+                      rowCount={rows.length}
+                    />
+                    <TableBody>
+                      {visibleRows.map((row, index) => {
+                        const isItemSelected = selected.includes(row.id);
+                        const labelId = `enhanced-table-checkbox-${index}`;
 
-                      return (
-                        <TableRow
-                          hover
-                          onClick={(event) => handleClick(event, row.id)}
-                          role="checkbox"
-                          aria-checked={isItemSelected}
-                          tabIndex={-1}
-                          key={row.id}
-                          selected={isItemSelected}
-                          sx={{ cursor: "pointer" }}
-                        >
-                          <TableCell padding="checkbox">
-                            <Checkbox
-                              color="primary"
-                              checked={isItemSelected}
-                              inputProps={{
-                                "aria-labelledby": labelId,
-                              }}
-                            />
-                          </TableCell>
-                          <TableCell
-                            component="th"
-                            id={labelId}
-                            scope="row"
-                            padding="none"
+                        return (
+                          <TableRow
+                            hover
+                            onClick={(event) => handleClick(event, row.id)}
+                            role="checkbox"
+                            aria-checked={isItemSelected}
+                            tabIndex={-1}
+                            key={row.id}
+                            selected={isItemSelected}
+                            sx={{ cursor: "pointer" }}
                           >
-                            {row.name}
-                          </TableCell>
-                          <TableCell align="right">{row.calories}</TableCell>
-                          <TableCell align="right">{row.fat}</TableCell>
-                          <TableCell align="right">{row.carbs}</TableCell>
-                          <TableCell align="right">{row.protein}</TableCell>
+                            <TableCell padding="checkbox">
+                              <Checkbox
+                                color="primary"
+                                checked={isItemSelected}
+                                inputProps={{
+                                  "aria-labelledby": labelId,
+                                }}
+                              />
+                            </TableCell>
+                            <TableCell
+                              component="th"
+                              id={labelId}
+                              scope="row"
+                              padding="none"
+                            >
+                              {row.name}
+                            </TableCell>
+                            <TableCell align="center">{row.amount}</TableCell>
+                            <TableCell align="center">{row.date}</TableCell>
+                            <TableCell align="center">{row.category}</TableCell>
+                            <TableCell align="center">{row.account}</TableCell>
+                            <TableCell align="center">{row.comments}</TableCell>
+                          </TableRow>
+                        );
+                      })}
+                      {emptyRows > 0 && (
+                        <TableRow style={{}}>
+                          <TableCell colSpan={6} />
                         </TableRow>
-                      );
-                    })}
-                    {emptyRows > 0 && (
-                      <TableRow style={{}}>
-                        <TableCell colSpan={6} />
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-              <TablePagination
-                rowsPerPageOptions={[5, 10, 25]}
-                component="div"
-                count={rows.length}
-                rowsPerPage={rowsPerPage}
-                page={page}
-                onPageChange={handleChangePage}
-                onRowsPerPageChange={handleChangeRowsPerPage}
-              />
-            </Paper>
-          </Box>
-        </Card>
+                      )}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+                <TablePagination
+                  rowsPerPageOptions={[10, 15, 25, 50]}
+                  component="div"
+                  count={rows.length}
+                  rowsPerPage={rowsPerPage}
+                  page={page}
+                  onPageChange={handleChangePage}
+                  onRowsPerPageChange={handleChangeRowsPerPage}
+                />
+              </Paper>
+            </Box>
+          </Card>
+        </Grid>
       </Grid>
-    </Grid>
+    </div>
   );
 }
-
-// const columns = [
-//   { id: "date", label: "Date", minWidth: 120 },
-//   { id: "name", label: "Name", minWidth: 80, align: "left" },
-//   { id: "amount", label: "Amount", minWidth: 80, align: "center" },
-//   { id: "category", label: "Category", minWidth: 120, align: "left" },
-//   { id: "account", label: "Account", minWidth: 120, align: "left" },
-//   { id: "comments", label: "Comments", minWidth: 170, align: "left" },
-// ];
-
-// function createData() {
-//   return { name, amount, date, category, account, comments };
-// }
-
-// const rows = [
-
-// ];
-
-// export default function TransactionsPage() {
-//   const [page, setPage] = React.useState(0);
-//   const [rowsPerPage, setRowsPerPage] = React.useState(10);
-//   const {
-//     onSelectAllClick,
-//     order,
-//     orderBy,
-//     numSelected,
-//     rowCount,
-//     onRequestSort,
-//   } = props;
-//   const createSortHandler = (property) => (event) => {
-//     onRequestSort(event, property);
-//   };
-
-//   const handleChangePage = (event, newPage) => {
-//     setPage(newPage);
-//   };
-
-//   const handleChangeRowsPerPage = (event) => {
-//     setRowsPerPage(+event.target.value);
-//     setPage(0);
-//   };
-
-//   return (
-//     <Grid marginTop={3} padding={2} container>
-//       <Grid item xs={12}>
-//         <Card sx={{ minWidth: 275 }}>
-//           <CardContent>
-//             <Typography variant="h5" component="div">
-//               Transactions Activity
-//             </Typography>
-//           </CardContent>
-//           <CardContent>
-//             <Paper sx={{ width: "100%", overflow: "hidden" }}>
-//               <TableContainer sx={{ maxHeight: 440 }}>
-//                 <Table stickyHeader aria-label="sticky table">
-//                   <TableHead>
-//                     <TableRow>
-//                       {columns.map((column) => (
-//                         <TableCell
-//                           key={column.id}
-//                           align={column.align}
-//                           style={{ minWidth: column.minWidth }}
-//                         >
-//                           {column.label}
-//                         </TableCell>
-//                       ))}
-//                     </TableRow>
-//                   </TableHead>
-//                   <TableBody>
-//                     {rows
-//                       .slice(
-//                         page * rowsPerPage,
-//                         page * rowsPerPage + rowsPerPage
-//                       )
-//                       .map((row) => {
-//                         return (
-//                           <TableRow
-//                             hover
-//                             role="checkbox"
-//                             tabIndex={-1}
-//                             key={row.code}
-//                           >
-//                             {columns.map((column) => {
-//                               const value = row[column.id];
-//                               return (
-//                                 <TableCell key={column.id} align={column.align}>
-//                                   {column.format && typeof value === "number"
-//                                     ? column.format(value)
-//                                     : value}
-//                                 </TableCell>
-//                               );
-//                             })}
-//                             <Button variant="text">View</Button>
-//                           </TableRow>
-//                         );
-//                       })}
-//                   </TableBody>
-//                 </Table>
-//               </TableContainer>
-//               <TablePagination
-//                 rowsPerPageOptions={[10, 25, 50, 100]}
-//                 component="div"
-//                 count={rows.length}
-//                 rowsPerPage={rowsPerPage}
-//                 page={page}
-//                 onPageChange={handleChangePage}
-//                 onRowsPerPageChange={handleChangeRowsPerPage}
-//               />
-//             </Paper>
-//           </CardContent>
-//         </Card>
-//       </Grid>
-//     </Grid>
-//   );
-// }

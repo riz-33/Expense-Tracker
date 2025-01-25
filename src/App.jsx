@@ -3,8 +3,9 @@ import SyncAltIcon from "@mui/icons-material/SyncAlt";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import { Outlet } from "react-router";
 import { ReactRouterAppProvider } from "@toolpad/core/react-router";
-import SettingsIcon from '@mui/icons-material/Settings';
+import SettingsIcon from "@mui/icons-material/Settings";
 import "./App.css";
+import React from "react";
 
 const NAVIGATION = [
   // {
@@ -45,8 +46,37 @@ const BRANDING = {
 };
 
 export default function App() {
+  const [session, setSession] = React.useState({
+    user: {
+      name: "Muhammad Rizwan",
+      email: "rizwan.quettawala@gmail.com",
+      image: "https://avatars.githubusercontent.com/u/19550456",
+    },
+  });
+  const authentication = React.useMemo(() => {
+    return {
+      signIn: () => {
+        setSession({
+          user: {
+            name: "Muhammad Rizwan",
+            email: "rizwan.quettawala@gmail.com",
+            image: "https://avatars.githubusercontent.com/u/19550456",
+          },
+        });
+      },
+      signOut: () => {
+        setSession(null);
+      },
+    };
+  }, []);
+
   return (
-    <ReactRouterAppProvider navigation={NAVIGATION} branding={BRANDING}>
+    <ReactRouterAppProvider
+      navigation={NAVIGATION}
+      branding={BRANDING}
+      authentication={authentication}
+      session={session}
+    >
       <Outlet />
     </ReactRouterAppProvider>
   );

@@ -1,9 +1,9 @@
-import TimelineIcon from "@mui/icons-material/Timeline";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import SyncAltIcon from "@mui/icons-material/SyncAlt";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import { Outlet } from "react-router";
 import { ReactRouterAppProvider } from "@toolpad/core/react-router";
+import SettingsIcon from '@mui/icons-material/Settings';
 import "./App.css";
 
 const NAVIGATION = [
@@ -26,9 +26,9 @@ const NAVIGATION = [
     icon: <AccountBalanceWalletIcon />,
   },
   {
-    segment: "reports",
-    title: "Reports",
-    icon: <TimelineIcon />,
+    segment: "settings",
+    title: "Settings",
+    icon: <SettingsIcon />,
   },
 ];
 

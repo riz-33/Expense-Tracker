@@ -7,7 +7,8 @@ import "./index.css";
 import { DashboardPage } from "./pages/DashboardPage";
 import { AccountsPage } from "./pages/AccountsPage";
 import TransactionsPage from "./pages/TransactionsPage";
-import { ReportsPage } from "./pages/ReportsPage";
+import SettingsPage from "./pages/SettingsPage";
+// import { SettingsPage } from "./pages/SettingsPage";
 
 const router = createBrowserRouter([
   {
@@ -30,8 +31,8 @@ const router = createBrowserRouter([
             Component: AccountsPage,
           },
           {
-            path: "/reports",
-            Component: ReportsPage,
+            path: "/settings",
+            Component: SettingsPage,
           },
         ],
       },

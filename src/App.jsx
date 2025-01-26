@@ -3,7 +3,7 @@ import SyncAltIcon from "@mui/icons-material/SyncAlt";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import { Outlet } from "react-router";
 import { ReactRouterAppProvider } from "@toolpad/core/react-router";
-import SettingsIcon from "@mui/icons-material/Settings";
+import AccountBoxIcon from "@mui/icons-material/AccountBox";
 import "./App.css";
 import React from "react";
 
@@ -27,9 +27,9 @@ const NAVIGATION = [
     icon: <AccountBalanceWalletIcon />,
   },
   {
-    segment: "settings",
-    title: "Settings",
-    icon: <SettingsIcon />,
+    segment: "profile",
+    title: "Profile",
+    icon: <AccountBoxIcon />,
   },
 ];
 

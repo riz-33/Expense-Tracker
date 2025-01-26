@@ -1,4 +1,4 @@
-import { createBrowserRouter, RouterProvider } from "react-router";
+ import { createBrowserRouter, RouterProvider } from "react-router";
 import App from "./App";
 import { Layout } from "./components/layout";
 import { StrictMode } from "react";
@@ -7,7 +7,8 @@ import "./index.css";
 import { DashboardPage } from "./pages/DashboardPage";
 import { AccountsPage } from "./pages/AccountsPage";
 import TransactionsPage from "./pages/TransactionsPage";
-import SettingsPage from "./pages/SettingsPage";
+import ProfilePage from "./pages/ProfilePage";
+import SignIn from "./pages/SignIn";
 
 const router = createBrowserRouter([
   {
@@ -30,8 +31,12 @@ const router = createBrowserRouter([
             Component: AccountsPage,
           },
           {
-            path: "/settings",
-            Component: SettingsPage,
+            path: "/profile",
+            Component: ProfilePage,
+          },
+          {
+            path: "/signin",
+            Component: SignIn,
           },
         ],
       },

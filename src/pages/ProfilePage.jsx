@@ -41,7 +41,7 @@ const tailFormItemLayout = {
     },
   },
 };
-const SettingsPage = () => {
+const ProfilePage = () => {
   const [form] = Form.useForm();
   const onFinish = (values) => {
     console.log("Received values of form: ", values);
@@ -54,7 +54,7 @@ const SettingsPage = () => {
             style={{ fontSize: 20, textAlign: "center", marginBottom: 10 }}
           >
             {" "}
-            General Settings
+            User Profile
           </Typography>
           <Form
             {...formItemLayout}
@@ -104,7 +104,6 @@ const SettingsPage = () => {
               name="phone"
               label="Phone Number"
               rules={[
-
                 {
                   required: true,
                   message: "Please input your phone number!",
@@ -149,4 +148,4 @@ const SettingsPage = () => {
     </Row>
   );
 };
-export default SettingsPage;
+export default ProfilePage;

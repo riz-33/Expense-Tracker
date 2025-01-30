@@ -127,11 +127,11 @@ export const DashboardPage = () => {
   return (
     <div>
       <div className="group-1">
-        <Grid marginTop={3} padding={2} container columnSpacing={5}>
-          <Grid item xs={3}>
+        <Grid padding={2} container rowSpacing={3} columnSpacing={5}>
+          <Grid item xs={12} sm={6} md={3}>
             <Card
               style={{
-                height: 150,
+                height: 120,
                 alignItems: "center",
                 justifyContent: "center",
                 display: "flex",
@@ -144,16 +144,16 @@ export const DashboardPage = () => {
                 >
                   Total Balance
                 </Typography>
-                <Typography variant="h4" component="div">
+                <Typography variant="h5" component="div">
                   Rs.20,000
                 </Typography>
               </CardContent>
             </Card>
           </Grid>
-          <Grid item xs={3}>
+          <Grid item xs={12} sm={6} md={3}>
             <Card
               style={{
-                height: 150,
+                height: 120,
                 alignItems: "center",
                 justifyContent: "center",
                 display: "flex",
@@ -166,16 +166,16 @@ export const DashboardPage = () => {
                 >
                   Total Income
                 </Typography>
-                <Typography variant="h4" component="div">
+                <Typography variant="h5" component="div">
                   Rs.50,000
                 </Typography>
               </CardContent>
             </Card>
           </Grid>
-          <Grid item xs={3}>
+          <Grid item xs={12} sm={6} md={3}>
             <Card
               style={{
-                height: 150,
+                height: 120,
                 alignItems: "center",
                 justifyContent: "center",
                 display: "flex",
@@ -188,16 +188,16 @@ export const DashboardPage = () => {
                 >
                   Total Expense
                 </Typography>
-                <Typography variant="h4" component="div">
+                <Typography variant="h5" component="div">
                   Rs.30,000
                 </Typography>
               </CardContent>
             </Card>
           </Grid>
-          <Grid item xs={3}>
+          <Grid item xs={12} sm={6} md={3}>
             <Card
               style={{
-                height: 150,
+                height: 120,
                 alignItems: "center",
                 justifyContent: "center",
                 display: "flex",
@@ -210,7 +210,7 @@ export const DashboardPage = () => {
                 >
                   Month
                 </Typography>
-                <Typography variant="h4" component="div">
+                <Typography variant="h5" component="div">
                   Jan 2025
                 </Typography>
               </CardContent>
@@ -220,8 +220,8 @@ export const DashboardPage = () => {
       </div>
 
       <div className="group-2">
-        <Grid padding={2} container columnSpacing={4}>
-          <Grid item xs={6}>
+        <Grid padding={2} container rowSpacing={3} columnSpacing={4}>
+          <Grid item xs={12} sm={6} md={6}>
             <Card>
               <Chart
                 chartType="PieChart"
@@ -239,7 +239,7 @@ export const DashboardPage = () => {
               />
             </Card>
           </Grid>
-          <Grid item xs={6}>
+          <Grid item xs={12} sm={6} md={6}>
             <Card>
               <Chart
                 chartType="ColumnChart"

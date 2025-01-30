@@ -120,6 +120,7 @@ function SideDrawer({ children }) {
           </IconButton>
         </DrawerHeader>
         <Divider />
+        
         <List>
           {navItems.map((item, index) => (
             <ListItem

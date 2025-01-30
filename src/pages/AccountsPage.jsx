@@ -42,9 +42,16 @@ export const AccountsPage = () => {
       >
         <Button variant="contained">Add Account</Button>
       </Grid>
-      <Grid marginTop={1} padding={4} container columnSpacing={4}>
-        <Grid item xs={3}>
-          <Card sx={{ maxWidth: 345 }}>
+
+      <Grid
+        marginTop={1}
+        padding={2}
+        container
+        rowSpacing={3}
+        columnSpacing={2}
+      >
+        <Grid item xs={12} sm={6} md={3}>
+          <Card sx={{maxWidth:290}} >
             <CardHeader
               avatar={
                 <Avatar sx={{ bgcolor: blue[800], marginBottom: 8 }}>
@@ -93,7 +100,7 @@ export const AccountsPage = () => {
                   <Typography sx={{ color: "text.secondary", mb: 1.5 }}>
                     Cash
                   </Typography>
-                  <Typography variant="h4" component="div">
+                  <Typography variant="h5" component="div">
                     Rs.20,000
                   </Typography>
                 </>
@@ -101,8 +108,8 @@ export const AccountsPage = () => {
             />
           </Card>
         </Grid>
-        <Grid item xs={3}>
-          <Card sx={{ maxWidth: 345 }}>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card sx={{maxWidth:290}}>
             <CardHeader
               avatar={
                 <Avatar
@@ -154,7 +161,7 @@ export const AccountsPage = () => {
                   <Typography sx={{ color: "text.secondary", mb: 1.5 }}>
                     Meezan Bank
                   </Typography>
-                  <Typography variant="h4" component="div">
+                  <Typography variant="h5" component="div">
                     Rs.50,000
                   </Typography>
                 </>
@@ -162,8 +169,8 @@ export const AccountsPage = () => {
             />
           </Card>
         </Grid>
-        <Grid item xs={3}>
-          <Card sx={{ maxWidth: 345 }}>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card sx={{maxWidth:290}}>
             <CardHeader
               avatar={
                 <Avatar
@@ -215,7 +222,7 @@ export const AccountsPage = () => {
                   <Typography sx={{ color: "text.secondary", mb: 1.5 }}>
                     Faysal Bank
                   </Typography>
-                  <Typography variant="h4" component="div">
+                  <Typography variant="h5" component="div">
                     Rs.100,000
                   </Typography>
                 </>
@@ -223,8 +230,8 @@ export const AccountsPage = () => {
             />
           </Card>
         </Grid>
-        <Grid item xs={3}>
-          <Card sx={{ maxWidth: 345 }}>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card sx={{maxWidth:290}}>
             <CardHeader
               avatar={
                 <Avatar
@@ -276,7 +283,7 @@ export const AccountsPage = () => {
                   <Typography sx={{ color: "text.secondary", mb: 1.5 }}>
                     Al Meezan
                   </Typography>
-                  <Typography variant="h4" component="div">
+                  <Typography variant="h5" component="div">
                     Rs.50,000
                   </Typography>
                 </>

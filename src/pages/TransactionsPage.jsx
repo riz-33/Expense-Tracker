@@ -364,28 +364,25 @@ export default function TransactionsPage() {
 
   return (
     <div>
-      <div>
-        <Grid marginTop={3} container columnSpacing={2}>
-          <Grid item xs={6}></Grid>
-          <Grid item xs={2}>
+        <Grid padding={1} container columnSpacing={1} justifyContent={"end"}>
+          <Grid item xs={12} sm={6} md={3}>
             <LocalizationProvider dateAdapter={AdapterDayjs}>
               <DemoContainer components={["DatePicker"]}>
                 <DatePicker label="Start Date" />
               </DemoContainer>
             </LocalizationProvider>
           </Grid>
-          <Grid item xs={2}>
+          <Grid item xs={12} sm={6} md={3}>
             <LocalizationProvider dateAdapter={AdapterDayjs}>
               <DemoContainer components={["DatePicker"]}>
                 <DatePicker label="End Date" />
               </DemoContainer>
             </LocalizationProvider>
           </Grid>
-          <Grid item xs={2} marginTop={2}>
+          <Grid xs={12} sm={2} md={1} margin={2}  >
             <Button variant="contained">Search</Button>
           </Grid>
         </Grid>
-      </div>
 
       <Grid padding={2} container>
         <Grid item xs={12}>

@@ -1,72 +1,66 @@
-'use client';
-import * as React from 'react';
-import { SignInPage } from '@toolpad/core/SignInPage';
-import {
-  signInWithGoogle,
-  signInWithGithub,
-  signInWithCredentials,
-} from '../firebase/auth';
-import { LinearProgress } from '@mui/material';
-import { Navigate, useNavigate } from 'react-router-dom';
-import { useSession } from '@toolpad/core';
+import { LockOutlined, UserOutlined } from "@ant-design/icons";
+import { Button, Checkbox, Form, Input, Flex, Row, Col } from "antd";
+const App = () => {
+  const onFinish = (values) => {
+    console.log("Received values of form: ", values);
+  };
+  return (
+    <Row>
+      <Col xs={2} sm={4} md={7} lg={8} xl={9}></Col>
+      <Col xs={20} sm={16} md={10} lg={8} xl={6}>
+        <Form
+          name="login"
+          initialValues={{
+            remember: true,
+          }}
+          style={{
+            textAlign: "center",
+            // maxWidth: 360,
+            height: "100vh",
+            justifyContent: "center",
+            // alignItems: "center",
+            display: "flex",
+            flexDirection: "column",
+          }}
+          onFinish={onFinish}
+        >
+          <Form.Item
+            name="username"
+            rules={[
+              {
+                required: true,
+                message: "Please input your Username!",
+              },
+            ]}
+          >
+            <Input prefix={<UserOutlined />} placeholder="Username" />
+          </Form.Item>
+          <Form.Item
+            name="password"
+            rules={[
+              {
+                required: true,
+                message: "Please input your Password!",
+              },
+            ]}
+          >
+            <Input
+              prefix={<LockOutlined />}
+              type="password"
+              placeholder="Password"
+            />
+          </Form.Item>
 
-export default function SignIn() {
-  const { session, setSession, loading } = useSession();
-  const navigate = useNavigate();
-
-  if (loading) {
-    return React.createElement(LinearProgress);
-  }
-
-  if (session) {
-    return React.createElement(Navigate, { to: "/" });
-  }
-
-  return React.createElement(SignInPage, {
-    providers: [
-      { id: 'google', name: 'Google' },
-      { id: 'github', name: 'GitHub' },
-      { id: 'credentials', name: 'Credentials' },
-    ],
-    signIn: async (provider, formData, callbackUrl) => {
-      let result;
-      try {
-        if (provider.id === 'google') {
-          result = await signInWithGoogle();
-        }
-        if (provider.id === 'github') {
-          result = await signInWithGithub();
-        }
-        if (provider.id === 'credentials') {
-          const email = formData?.get('email');
-          const password = formData?.get('password');
-
-          if (!email || !password) {
-            return { error: 'Email and password are required' };
-          }
-
-          result = await signInWithCredentials(email, password);
-        }
-
-        if (result?.success && result?.user) {
-          const userSession = {
-            user: {
-              name: result.user.displayName || '',
-              email: result.user.email || '',
-              image: result.user.photoURL || '',
-            },
-          };
-          setSession(userSession);
-          navigate(callbackUrl || '/', { replace: true });
-          return {};
-        }
-        return { error: result?.error || 'Failed to sign in' };
-      } catch (error) {
-        return {
-          error: error instanceof Error ? error.message : 'An error occurred',
-        };
-      }
-    }
-  });
-}
-
+          <Form.Item>
+            <Button block type="primary" htmlType="submit">
+              Log in
+            </Button>
+            or <a href="">Register now!</a>
+          </Form.Item>
+        </Form>
+      </Col>
+      <Col xs={2} sm={4} md={7} lg={8} xl={9}></Col>
+    </Row>
+  );
+};
+export default App;

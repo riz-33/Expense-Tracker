@@ -1,12 +1,12 @@
-import { BrowserRouter, Route, Routes } from "react-router-dom";
-import { App } from "../App";
+import "../App";
 import "../App.css";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 import TransactionsPage from "../pages/TransactionsPage";
 import { DashboardPage } from "../pages/DashboardPage";
 import { AccountsPage } from "../pages/AccountsPage";
 import ProfilePage from "../pages/ProfilePage";
-import "../App";
 import SideDrawer from "../components/SideDrawer";
+import SignIn from "../pages/SignIn";
 
 function AppRouter() {
   return (
@@ -44,6 +44,7 @@ function AppRouter() {
             </SideDrawer>
           }
         />
+        <Route path="/signin" element={<SignIn />} />
       </Routes>
     </BrowserRouter>
   );

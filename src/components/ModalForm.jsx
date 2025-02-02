@@ -2,7 +2,6 @@ import {
   Tabs,
   Form,
   Input,
-  Radio,
   Select,
   DatePicker,
   InputNumber,
@@ -24,7 +23,7 @@ const items = [
             style={{ flex: 1 }}
             rules={[
               {
-                required: true,
+                // required: true,
                 message: "Please input the title of Expense!",
               },
             ]}

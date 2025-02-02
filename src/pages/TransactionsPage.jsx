@@ -3,10 +3,8 @@ import PropTypes from "prop-types";
 import { alpha } from "@mui/material/styles";
 import { visuallyHidden } from "@mui/utils";
 import DeleteIcon from "@mui/icons-material/DeleteRounded";
-// import FilterListIcon from "@mui/icons-material/FilterList";
 import AddBoxIcon from "@mui/icons-material/AddBox";
 import ModeEditIcon from "@mui/icons-material/ModeEdit";
-import dayjs from "dayjs";
 import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -31,6 +29,9 @@ import {
   Tooltip,
   Button,
 } from "@mui/material";
+import { Form, Input, Modal, Radio } from "antd";
+import { useState } from "react";
+import ModalTab from "../components/ModalForm";
 
 function createData(id, name, amount, date, category, account, comments) {
   return {
@@ -239,6 +240,15 @@ EnhancedTableHead.propTypes = {
 
 function EnhancedTableToolbar(props) {
   const { numSelected } = props;
+  const [form] = Form.useForm();
+  const [formValues, setFormValues] = useState();
+  const [open, setOpen] = useState(false);
+  const onCreate = (values) => {
+    console.log("Received values of form: ", values);
+    setFormValues(values);
+    setOpen(false);
+  };
+
   return (
     <Toolbar
       sx={[
@@ -289,9 +299,41 @@ function EnhancedTableToolbar(props) {
         </React.Fragment>
       ) : (
         <Tooltip title="Add Expense">
-          <IconButton>{<AddBoxIcon />}</IconButton>
+          <IconButton onClick={() => setOpen(true)}>
+            {<AddBoxIcon />}
+          </IconButton>
         </Tooltip>
       )}
+      <>
+        <Modal
+          open={open}
+          title="New Transaction"
+          okText="Create"
+          cancelText="Cancel"
+          okButtonProps={{
+            autoFocus: true,
+            htmlType: "submit",
+          }}
+          onCancel={() => setOpen(false)}
+          destroyOnClose
+          modalRender={(dom) => (
+            <Form
+              layout="vertical"
+              form={form}
+              name="form_in_modal"
+              initialValues={{
+                paymentType: "Cash",
+              }}
+              clearOnDestroy
+              onFinish={(values) => onCreate(values)}
+            >
+              {dom}
+            </Form>
+          )}
+        >
+          <ModalTab/>
+        </Modal>
+      </>
     </Toolbar>
   );
 }
@@ -364,25 +406,25 @@ export default function TransactionsPage() {
 
   return (
     <div>
-        <Grid padding={1} container columnSpacing={1} justifyContent={"end"}>
-          <Grid item xs={12} sm={6} md={3}>
-            <LocalizationProvider dateAdapter={AdapterDayjs}>
-              <DemoContainer components={["DatePicker"]}>
-                <DatePicker label="Start Date" />
-              </DemoContainer>
-            </LocalizationProvider>
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <LocalizationProvider dateAdapter={AdapterDayjs}>
-              <DemoContainer components={["DatePicker"]}>
-                <DatePicker label="End Date" />
-              </DemoContainer>
-            </LocalizationProvider>
-          </Grid>
-          <Grid xs={12} sm={2} md={1} margin={2}  >
-            <Button variant="contained">Search</Button>
-          </Grid>
+      <Grid padding={1} container columnSpacing={1} justifyContent={"end"}>
+        <Grid item xs={12} sm={6} md={3}>
+          <LocalizationProvider dateAdapter={AdapterDayjs}>
+            <DemoContainer components={["DatePicker"]}>
+              <DatePicker label="Start Date" />
+            </DemoContainer>
+          </LocalizationProvider>
         </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <LocalizationProvider dateAdapter={AdapterDayjs}>
+            <DemoContainer components={["DatePicker"]}>
+              <DatePicker label="End Date" />
+            </DemoContainer>
+          </LocalizationProvider>
+        </Grid>
+        <Grid item xs={12} sm={2} md={1} margin={2}>
+          <Button variant="contained">Search</Button>
+        </Grid>
+      </Grid>
 
       <Grid padding={2} container>
         <Grid item xs={12}>

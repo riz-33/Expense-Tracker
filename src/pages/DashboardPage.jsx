@@ -135,6 +135,7 @@ export const DashboardPage = () => {
                 alignItems: "center",
                 justifyContent: "center",
                 display: "flex",
+                backgroundColor: "lightgrey",
               }}
             >
               <CardContent style={{ textAlign: "center" }}>

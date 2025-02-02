@@ -6,7 +6,8 @@ import { DashboardPage } from "../pages/DashboardPage";
 import { AccountsPage } from "../pages/AccountsPage";
 import ProfilePage from "../pages/ProfilePage";
 import SideDrawer from "../components/SideDrawer";
-import SignIn from "../pages/SignIn";
+import RegisterForm from "../pages/SignUp";
+import LoginForm from "../pages/SignIn";
 
 function AppRouter() {
   return (
@@ -44,7 +45,8 @@ function AppRouter() {
             </SideDrawer>
           }
         />
-        <Route path="/signin" element={<SignIn />} />
+        <Route path="/signin" element={<LoginForm />} />
+        <Route path="/register" element={<RegisterForm />} />
       </Routes>
     </BrowserRouter>
   );

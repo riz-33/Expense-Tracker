@@ -93,7 +93,7 @@ function SideDrawer({ children }) {
   return (
     <Box sx={{ display: "flex" }}>
       <CssBaseline />
-      <AppBar position="fixed">
+      {/* <AppBar position="fixed">
         <Toolbar>
           <IconButton
             color="inherit"
@@ -108,7 +108,7 @@ function SideDrawer({ children }) {
             Expense Tracker
           </Typography>
         </Toolbar>
-      </AppBar>
+      </AppBar> */}
       <Drawer variant="permanent" open={open}>
         <DrawerHeader>
           <IconButton onClick={toggleDrawer}>

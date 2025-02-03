@@ -32,6 +32,7 @@ import {
 import { Form, Input, Modal, Radio } from "antd";
 import { useState } from "react";
 import ModalTab from "../components/ModalForm";
+import { EditForm } from "../components/EditForm";
 
 function createData(id, name, amount, date, category, account, comments) {
   return {
@@ -248,6 +249,14 @@ function EnhancedTableToolbar(props) {
     setFormValues(values);
     setOpen(false);
   };
+  const [editForm] = Form.useForm();
+  const [editFormValues, setEditFormValues] = useState();
+  const [openEdit, setOpenEdit] = useState(false);
+  const onUpdate = (values) => {
+    console.log("Received values of form: ", values);
+    setEditFormValues(values);
+    setOpenEdit(false);
+  };
 
   return (
     <Toolbar
@@ -287,10 +296,40 @@ function EnhancedTableToolbar(props) {
       {numSelected > 0 ? (
         <React.Fragment>
           <Tooltip title="Edit">
-            <IconButton>
+            <IconButton onClick={() => setOpenEdit(true)}>
               <ModeEditIcon />
             </IconButton>
           </Tooltip>
+          <>
+            <Modal
+              open={openEdit}
+              title="Edit Transaction"
+              okText="Update"
+              cancelText="Cancel"
+              okButtonProps={{
+                autoFocus: true,
+                htmlType: "submit",
+              }}
+              onCancel={() => setOpenEdit(false)}
+              destroyOnClose
+              modalRender={(dom) => (
+                <Form
+                  layout="vertical"
+                  form={editForm}
+                  name="form_in_modal"
+                  initialValues={{
+                    modifier: "public",
+                  }}
+                  clearOnDestroy
+                  onFinish={(values) => onUpdate(values)}
+                >
+                  {dom}
+                </Form>
+              )}
+            >
+              <EditForm/>
+            </Modal>
+          </>
           <Tooltip title="Delete">
             <IconButton>
               <DeleteIcon />
@@ -331,7 +370,7 @@ function EnhancedTableToolbar(props) {
             </Form>
           )}
         >
-          <ModalTab/>
+          <ModalTab />
         </Modal>
       </>
     </Toolbar>

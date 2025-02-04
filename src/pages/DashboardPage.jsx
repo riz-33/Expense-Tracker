@@ -131,7 +131,7 @@ export const DashboardPage = () => {
                 alignItems: "center",
                 justifyContent: "center",
                 display: "flex",
-                backgroundColor: "lightgrey",
+                // backgroundColor: "lightgrey",
               }}
             >
               <CardContent style={{ textAlign: "center" }}>
@@ -219,7 +219,8 @@ export const DashboardPage = () => {
       <div className="group-2">
         <Grid padding={2} container rowSpacing={3} columnSpacing={4}>
           <Grid item xs={12} sm={6} md={6}>
-            <Card>
+            <Card style={{backgroundColor: "lightgrey"}}
+                >
               <Chart
                 chartType="PieChart"
                 data={data}

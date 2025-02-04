@@ -16,11 +16,12 @@ import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
-import { Tooltip } from "@mui/material";
+import { Avatar, Menu, MenuItem, Tooltip } from "@mui/material";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import SyncAltIcon from "@mui/icons-material/SyncAlt";
 import AccountBoxIcon from "@mui/icons-material/AccountBox";
+import { AccountCircle } from "@mui/icons-material";
 
 const drawerWidth = 240;
 
@@ -90,10 +91,20 @@ function SideDrawer({ children }) {
     setOpen((prev) => !prev);
   };
 
+  const [anchorEl, setAnchorEl] = React.useState(null);
+
+  const handleMenu = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
   return (
     <Box sx={{ display: "flex" }}>
       <CssBaseline />
-      {/* <AppBar position="fixed">
+      <AppBar position="fixed">
         <Toolbar>
           <IconButton
             color="inherit"
@@ -107,8 +118,42 @@ function SideDrawer({ children }) {
           <Typography variant="h6" noWrap component="div">
             Expense Tracker
           </Typography>
+
+          <Box sx={{ flexGrow: 1, display: "flex", justifyContent: "end" }}>
+            <Tooltip title="Open settings">
+              <IconButton
+                size="large"
+                aria-label="account of current user"
+                aria-controls="menu-appbar"
+                aria-haspopup="true"
+                onClick={handleMenu}
+                color="inherit"
+                variant='square'
+              >
+                <AccountCircle />
+              </IconButton>
+            </Tooltip>
+            <Menu
+              id="menu-appbar"
+              anchorEl={anchorEl}
+              anchorOrigin={{
+                vertical: "top",
+                horizontal: "right",
+              }}
+              keepMounted
+              transformOrigin={{
+                vertical: "top",
+                horizontal: "right",
+              }}
+              open={Boolean(anchorEl)}
+              onClose={handleClose}
+            >
+              <MenuItem onClick={handleClose}>Profile</MenuItem>
+              <MenuItem onClick={handleClose}>Logout</MenuItem>
+            </Menu>
+          </Box>
         </Toolbar>
-      </AppBar> */}
+      </AppBar>
       <Drawer variant="permanent" open={open}>
         <DrawerHeader>
           <IconButton onClick={toggleDrawer}>
@@ -120,7 +165,7 @@ function SideDrawer({ children }) {
           </IconButton>
         </DrawerHeader>
         <Divider />
-        
+
         <List>
           {navItems.map((item, index) => (
             <ListItem

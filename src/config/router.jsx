@@ -50,7 +50,7 @@ function AppRouter() {
           <Routes>
             <Route
               path="/"
-              element={User ? <Navigate to={"/todo"} /> : <LoginForm />}
+              element={User ? <Navigate to={"/dashboard"} /> : <LoginForm />}
             />
             <Route
               path="/register"

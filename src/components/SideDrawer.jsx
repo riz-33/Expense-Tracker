@@ -22,6 +22,20 @@ import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import SyncAltIcon from "@mui/icons-material/SyncAlt";
 import AccountBoxIcon from "@mui/icons-material/AccountBox";
 import { AccountCircle } from "@mui/icons-material";
+import {
+  auth,
+  signOut,
+  collection,
+  addDoc,
+  db,
+  serverTimestamp,
+  query,
+  doc,
+  getDocs,
+  updateDoc,
+  deleteDoc,
+  orderBy,
+} from "../config/firebase";
 
 const drawerWidth = 240;
 
@@ -76,7 +90,7 @@ const Drawer = styled(MuiDrawer, {
 }));
 
 const navItems = [
-  { text: "Dashboard", icon: <DashboardIcon />, path: "/" },
+  { text: "Dashboard", icon: <DashboardIcon />, path: "/dashboard" },
   { text: "Transactions", icon: <SyncAltIcon />, path: "/transactions" },
   { text: "Accounts", icon: <AccountBalanceWalletIcon />, path: "/accounts" },
   { text: "Profile", icon: <AccountBoxIcon />, path: "/profile" },
@@ -100,6 +114,8 @@ function SideDrawer({ children }) {
   const handleClose = () => {
     setAnchorEl(null);
   };
+
+  const logOut = () => signOut(auth);
 
   return (
     <Box sx={{ display: "flex" }}>
@@ -149,7 +165,7 @@ function SideDrawer({ children }) {
               onClose={handleClose}
             >
               <MenuItem onClick={handleClose}>Profile</MenuItem>
-              <MenuItem onClick={handleClose}>Logout</MenuItem>
+              <MenuItem onClick={() => { handleClose(); logOut(); }}>Logout</MenuItem>
             </Menu>
           </Box>
         </Toolbar>

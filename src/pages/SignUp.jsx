@@ -1,4 +1,14 @@
-import { Button, Card, Col, Form, Input, InputNumber, Row, Select, Typography } from "antd";
+import {
+  Button,
+  Card,
+  Col,
+  Form,
+  Input,
+  InputNumber,
+  Row,
+  Select,
+  Typography,
+} from "antd";
 import {
   LockOutlined,
   UserOutlined,
@@ -15,8 +25,9 @@ import {
   serverTimestamp,
 } from "../config/firebase";
 
-const onFinish = (values) => {
+const onFinish = async (values) => {
   console.log("Success:", values);
+  await onSubmit(values);
 };
 const onFinishFailed = (errorInfo) => {
   console.log("Failed:", errorInfo);
@@ -24,28 +35,31 @@ const onFinishFailed = (errorInfo) => {
 const { Option } = Select;
 const { Title } = Typography;
 
-const RegisterForm = () => {
-    const onSubmit = async (data) => {
-    try {
-      const response = await createUserWithEmailAndPassword(
-        auth,
-        data.email,
-        data.password
-      );
-      // showToastMessage("User Registered Successfully!", "success");
-      await setDoc(doc(db, "users", response.user.uid), {
-        username: data.username,
-        email: data.email,
-        password: data.password,
-        uid: response.user.uid,
-        createdAt: serverTimestamp(),
-      });
-      console.log("User registered and saved to Firestore:", response.user);
-    } catch (error) {
-      console.error("Error during email/password signup:", error);
-    }
-  };
+const onSubmit = async (data) => {
+  try {
+    const response = await createUserWithEmailAndPassword(
+      auth,
+      data.email,
+      data.password
+    );
+    // showToastMessage("User Registered Successfully!", "success");
+    await setDoc(doc(db, "users", response.user.uid), {
+      username: data.username,
+      email: data.email,
+      password: data.password,
+      number: data.phone,
+      income:data.income,
+      currency: 'PKR',
+      uid: response.user.uid,
+      createdAt: serverTimestamp(),
+    });
+    console.log("User registered and saved to Firestore:", response.user);
+  } catch (error) {
+    console.error("Error during email/password signup:", error);
+  }
+};
 
+const RegisterForm = () => {
   const suffixSelector = (
     <Form.Item name="suffix" noStyle>
       <Select
@@ -66,7 +80,9 @@ const RegisterForm = () => {
       <Col xs={2} sm={4} md={6} lg={8} xl={8}></Col>
       <Col xs={20} sm={16} md={12} lg={8} xl={8} style={{ marginTop: 60 }}>
         <Card>
-        <Title underline level={2} style={{textAlign:"center"}}>Register</Title>
+          <Title underline level={2} style={{ textAlign: "center" }}>
+            Register
+          </Title>
           <Form
             name="basic"
             initialValues={{
@@ -163,7 +179,6 @@ const RegisterForm = () => {
                 style={{
                   width: "100%",
                 }}
-
               />
             </Form.Item>
 
@@ -187,7 +202,7 @@ const RegisterForm = () => {
             </Form.Item>
 
             <Form.Item label={null}>
-              <Button onClick={onSubmit} block type="primary" htmlType="submit">
+              <Button block type="primary" htmlType="submit">
                 Sign Up
               </Button>
               or <a href="/">Login now!</a>

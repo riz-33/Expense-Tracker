@@ -14,12 +14,23 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
+import User from "../context/user";
+import { useContext, useEffect, useState } from "react";
+import {
+  auth,
+  signOut,
+  collection,
+  addDoc,
+  db,
+  serverTimestamp,
+  query,
+  doc,
+  getDocs,
+  updateDoc,
+  deleteDoc,
+  orderBy,
+} from "../config/firebase";
 
-const data = [
-  ["Summary", "Income & Expenses"],
-  ["Income", 50000],
-  ["Expense", 30000],
-];
 
 const dataNew = [
   ["Name", "Expenses"],
@@ -119,6 +130,32 @@ export const DashboardPage = () => {
     setRowsPerPage(+event.target.value);
     setPage(0);
   };
+  const user = useContext(User).user;
+  const month = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
+
+  const d = new Date();
+  const currentMonth = month[d.getMonth()];
+  const currentYear = new Date().getFullYear();
+
+  const data = [
+    ["Summary", "Income & Expenses"],
+    ["Income", user.income],
+    ["Expense", user.expense],
+  ];
+  
 
   return (
     <div>
@@ -142,7 +179,7 @@ export const DashboardPage = () => {
                   Total Balance
                 </Typography>
                 <Typography variant="h5" component="div">
-                  Rs.20,000
+                  {user.currency} {user.income - user.expense}
                 </Typography>
               </CardContent>
             </Card>
@@ -164,7 +201,7 @@ export const DashboardPage = () => {
                   Total Income
                 </Typography>
                 <Typography variant="h5" component="div">
-                  Rs.50,000
+                  {user.currency} {user.income}
                 </Typography>
               </CardContent>
             </Card>
@@ -186,7 +223,7 @@ export const DashboardPage = () => {
                   Total Expense
                 </Typography>
                 <Typography variant="h5" component="div">
-                  Rs.30,000
+                  {user.currency} {user.expense}
                 </Typography>
               </CardContent>
             </Card>
@@ -208,7 +245,7 @@ export const DashboardPage = () => {
                   Month
                 </Typography>
                 <Typography variant="h5" component="div">
-                  Jan 2025
+                  {currentMonth} {currentYear}
                 </Typography>
               </CardContent>
             </Card>
@@ -219,8 +256,7 @@ export const DashboardPage = () => {
       <div className="group-2">
         <Grid padding={2} container rowSpacing={3} columnSpacing={4}>
           <Grid item xs={12} sm={6} md={6}>
-            <Card style={{backgroundColor: "lightgrey"}}
-                >
+            <Card style={{ backgroundColor: "lightgrey" }}>
               <Chart
                 chartType="PieChart"
                 data={data}

@@ -1,13 +1,45 @@
 import { Button, Card, Col, Form, Input, Row, Typography } from "antd";
 import { LockOutlined, UserOutlined } from "@ant-design/icons";
 const { Title } = Typography;
+import {
+  db,
+  doc,
+  getDoc,
+  auth,
+  signInWithEmailAndPassword,
+} from "../config/firebase";
 
-const onFinish = (values) => {
+const onFinish = async (values) => {
   console.log("Success:", values);
+  await onSubmit(values);
 };
 const onFinishFailed = (errorInfo) => {
   console.log("Failed:", errorInfo);
 };
+
+const onSubmit = async (data) => {
+  try {
+    const response = await signInWithEmailAndPassword(
+      auth,
+      data.email,
+      data.password
+    );
+    // showToastMessage("User Login Successfully!", "success");
+    const docRef = doc(db, "users", response.user.uid);
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      console.log("Document data:", docSnap.data());
+    } else {
+      console.log("No such document!");
+    }
+    // reset();
+  } catch (error) {
+    console.log(error);
+    // showToastMessage(`${error}`, "danger");
+  }
+};
+
 const LoginForm = () => (
   <Row>
     <Col xs={2} sm={4} md={6} lg={8} xl={8}></Col>
@@ -18,6 +50,7 @@ const LoginForm = () => (
         </Title>
 
         <Form
+          // onSubmit={onSubmit}
           name="basic"
           initialValues={{
             remember: true,
@@ -27,15 +60,15 @@ const LoginForm = () => (
           autoComplete="off"
         >
           <Form.Item
-            name="username"
+            name="email"
             rules={[
               {
                 required: true,
-                message: "Please input your username!",
+                message: "Please input your email!",
               },
             ]}
           >
-            <Input prefix={<UserOutlined />} placeholder="Username" />
+            <Input prefix={<UserOutlined />} placeholder="Email" />
           </Form.Item>
 
           <Form.Item

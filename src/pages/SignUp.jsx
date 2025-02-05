@@ -6,6 +6,15 @@ import {
   PhoneOutlined,
   WalletOutlined,
 } from "@ant-design/icons";
+import {
+  auth,
+  createUserWithEmailAndPassword,
+  db,
+  doc,
+  setDoc,
+  serverTimestamp,
+} from "../config/firebase";
+
 const onFinish = (values) => {
   console.log("Success:", values);
 };
@@ -14,7 +23,29 @@ const onFinishFailed = (errorInfo) => {
 };
 const { Option } = Select;
 const { Title } = Typography;
+
 const RegisterForm = () => {
+    const onSubmit = async (data) => {
+    try {
+      const response = await createUserWithEmailAndPassword(
+        auth,
+        data.email,
+        data.password
+      );
+      // showToastMessage("User Registered Successfully!", "success");
+      await setDoc(doc(db, "users", response.user.uid), {
+        username: data.username,
+        email: data.email,
+        password: data.password,
+        uid: response.user.uid,
+        createdAt: serverTimestamp(),
+      });
+      console.log("User registered and saved to Firestore:", response.user);
+    } catch (error) {
+      console.error("Error during email/password signup:", error);
+    }
+  };
+
   const suffixSelector = (
     <Form.Item name="suffix" noStyle>
       <Select
@@ -156,10 +187,10 @@ const RegisterForm = () => {
             </Form.Item>
 
             <Form.Item label={null}>
-              <Button block type="primary" htmlType="submit">
+              <Button onClick={onSubmit} block type="primary" htmlType="submit">
                 Sign Up
               </Button>
-              or <a href="/signin">Login now!</a>
+              or <a href="/">Login now!</a>
             </Form.Item>
           </Form>
         </Card>

@@ -164,7 +164,7 @@ function SideDrawer({ children }) {
               open={Boolean(anchorEl)}
               onClose={handleClose}
             >
-              <MenuItem onClick={handleClose}>Profile</MenuItem>
+              <MenuItem onClick={() => { navigate('/profile'); handleClose(); }} >Profile</MenuItem>
               <MenuItem onClick={() => { handleClose(); logOut(); }}>Logout</MenuItem>
             </Menu>
           </Box>

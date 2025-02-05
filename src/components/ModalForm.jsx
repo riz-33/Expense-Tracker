@@ -23,14 +23,20 @@ const items = [
             style={{ flex: 1 }}
             rules={[
               {
-                // required: true,
+                required: true,
                 message: "Please input the title of Expense!",
               },
             ]}
           >
             <Input />
           </Form.Item>
-          <Form.Item name="category" label="Category" style={{ flex: 1 }}>
+          <Form.Item name="category" label="Category" style={{ flex: 1 }}
+                      rules={[
+                        {
+                          required: true,
+                          message: "Please input the category of Expense!",
+                        },
+                      ]}>
             <Select>
               <Select.Option value="housing">Housing</Select.Option>
               <Select.Option value="food">Food</Select.Option>
@@ -48,13 +54,31 @@ const items = [
           </Form.Item>
         </div>
         <div style={{ display: "flex", gap: "16px" }}>
-          <Form.Item name="date" label="Select Date" style={{ width: "100%" }}>
+          <Form.Item name="date" label="Select Date" style={{ width: "100%" }}
+                      rules={[
+                        {
+                          required: true,
+                          message: "Please input the date of Expense!",
+                        },
+                      ]}>
             <DatePicker style={{ width: "100%" }} />
           </Form.Item>
-          <Form.Item name="amount" label="Amount" style={{ width: "100%" }}>
+          <Form.Item name="amount" label="Amount" style={{ width: "100%" }}
+                      rules={[
+                        {
+                          required: true,
+                          message: "Please input the amount of Expense!",
+                        },
+                      ]}>
             <InputNumber style={{ width: "100%" }} />
           </Form.Item>
-          <Form.Item name="account" label="Account" style={{ width: "100%" }}>
+          <Form.Item name="account" label="Account" style={{ width: "100%" }}
+                      rules={[
+                        {
+                          required: true,
+                          message: "Please input the account of Expense!",
+                        },
+                      ]}>
             <Select>
               <Select.Option value="cash">Cash</Select.Option>
               <Select.Option value="debit">Debit Card</Select.Option>

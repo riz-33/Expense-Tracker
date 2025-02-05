@@ -33,6 +33,21 @@ import { Form, Input, Modal, Radio } from "antd";
 import { useState } from "react";
 import ModalTab from "../components/ModalForm";
 import { EditForm } from "../components/EditForm";
+import {
+  auth,
+  signOut,
+  collection,
+  addDoc,
+  db,
+  serverTimestamp,
+  query,
+  doc,
+  getDocs,
+  updateDoc,
+  deleteDoc,
+  orderBy,
+} from "../config/firebase";
+import User from "../context/user";
 
 function createData(id, name, amount, date, category, account, comments) {
   return {
@@ -240,14 +255,16 @@ EnhancedTableHead.propTypes = {
 };
 
 function EnhancedTableToolbar(props) {
+  const user = React.useContext(User).user;
   const { numSelected } = props;
   const [form] = Form.useForm();
   const [formValues, setFormValues] = useState();
   const [open, setOpen] = useState(false);
-  const onCreate = (values) => {
+  const onCreate = async (values) => {
     console.log("Received values of form: ", values);
     setFormValues(values);
     setOpen(false);
+    await addExpense(values);
   };
   const [editForm] = Form.useForm();
   const [editFormValues, setEditFormValues] = useState();
@@ -256,6 +273,23 @@ function EnhancedTableToolbar(props) {
     console.log("Received values of form: ", values);
     setEditFormValues(values);
     setOpenEdit(false);
+  };
+
+  const addExpense = async (data) => {
+    try {
+      await addDoc(collection(db, "users", user.uid, "expenses"), {
+        title: data.title,
+        category: data?.category,
+        // date: data.date,
+        amount: data?.amount,
+        account: data?.account,
+        comments: data?.comments || ("") ,
+        // createdAt: serverTimestamp(),
+      });
+      console.log("Received data of form: ", data);
+    } catch (error) {
+      console.error("Error adding todo:", error);
+    }
   };
 
   return (
@@ -327,7 +361,7 @@ function EnhancedTableToolbar(props) {
                 </Form>
               )}
             >
-              <EditForm/>
+              <EditForm />
             </Modal>
           </>
           <Tooltip title="Delete">

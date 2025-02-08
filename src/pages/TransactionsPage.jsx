@@ -8,7 +8,18 @@ import ModeEditIcon from "@mui/icons-material/ModeEdit";
 import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+// import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { useState } from "react";
+import {
+  Modal,
+  Tabs,
+  Form,
+  Input,
+  Select,
+  DatePicker,
+  InputNumber,
+} from "antd";
+
 import {
   Box,
   Card,
@@ -29,8 +40,6 @@ import {
   Tooltip,
   Button,
 } from "@mui/material";
-import { Form, Input, Modal, Radio } from "antd";
-import { useState } from "react";
 import ModalTab from "../components/ModalForm";
 import { EditForm } from "../components/EditForm";
 import {
@@ -48,6 +57,8 @@ import {
   orderBy,
 } from "../config/firebase";
 import User from "../context/user";
+import { Timestamp } from "firebase/firestore";
+import Item from "antd/es/list/Item";
 
 function createData(id, name, amount, date, category, account, comments) {
   return {
@@ -110,6 +121,7 @@ const rows = [
   ),
   createData(7, "Eggs", "500", "Wed 22 Jan 2025", "Food", "Cash", "Eggs"),
   createData(
+    8,
     "Fuel",
     "1,000",
     "Thu 23 Jan 2025",
@@ -118,7 +130,7 @@ const rows = [
     "Fuel"
   ),
   createData(
-    8,
+    9,
     "Hospital",
     "2,000",
     "Fri 24 Jan 2025",
@@ -127,7 +139,7 @@ const rows = [
     "Routine Checkup"
   ),
   createData(
-    9,
+    10,
     "Formal",
     "8,000",
     "Sat 25 Jan 2025",
@@ -254,18 +266,12 @@ EnhancedTableHead.propTypes = {
   rowCount: PropTypes.number.isRequired,
 };
 
+const { TextArea } = Input;
+
 function EnhancedTableToolbar(props) {
   const user = React.useContext(User).user;
   const { numSelected } = props;
-  const [form] = Form.useForm();
-  const [formValues, setFormValues] = useState();
-  const [open, setOpen] = useState(false);
-  const onCreate = async (values) => {
-    console.log("Received values of form: ", values);
-    setFormValues(values);
-    setOpen(false);
-    await addExpense(values);
-  };
+
   const [editForm] = Form.useForm();
   const [editFormValues, setEditFormValues] = useState();
   const [openEdit, setOpenEdit] = useState(false);
@@ -276,20 +282,107 @@ function EnhancedTableToolbar(props) {
   };
 
   const addExpense = async (data) => {
+    const selectedDate = new Date(data.date);
     try {
       await addDoc(collection(db, "users", user.uid, "expenses"), {
         title: data.title,
         category: data?.category,
-        // date: data.date,
+        date: Timestamp.fromDate(selectedDate),
         amount: data?.amount,
         account: data?.account,
-        comments: data?.comments || ("") ,
+        comments: data?.comments || "",
         // createdAt: serverTimestamp(),
       });
       console.log("Received data of form: ", data);
     } catch (error) {
       console.error("Error adding todo:", error);
     }
+  };
+
+  // const [form] = Form.useForm();
+  // const [formValues, setFormValues] = useState();
+  const onCreate = async (values) => {
+    console.log("Received values of form: ", values);
+    // setFormValues(values);
+    // setOpen(false);
+    // await addExpense(values);
+  };
+
+  const [activeTab, setActiveTab] = useState("expense");
+  const [open, setOpen] = useState(false);
+  const [expenseForm] = Form.useForm();
+  const [transferForm] = Form.useForm();
+  const [incomeForm] = Form.useForm();
+
+  const handleSubmit = async () => {
+    try {
+      let values;
+      if (activeTab === "expense") {
+        values = await expenseForm.validateFields();
+        const selectedDate = new Date(values.date);
+        try {
+          await addDoc(collection(db, "users", user.uid, "transactions"), {
+            title: values.title,
+            category: values?.category,
+            date: Timestamp.fromDate(selectedDate),
+            amount: values?.amount,
+            mode: values?.account,
+            comments: values?.comments || "",
+            type: "expense",
+            createdAt: serverTimestamp(),
+          });
+          console.log("Saved to Firestore: ", values);
+        } catch (error) {
+          console.error("Error adding todo:", error);
+        }
+      } else if (activeTab === "transfer") {
+        values = await transferForm.validateFields();
+        const selectedDate = new Date(values.date);
+        try {
+          await addDoc(collection(db, "users", user.uid, "transactions"), {
+            fromAccount: values.fromAccount,
+            toAccount: values?.toAccount,
+            date: Timestamp.fromDate(selectedDate),
+            amount: values?.amount,
+            comments: values?.comments || "",
+            type: "transfer",
+            createdAt: serverTimestamp(),
+          });
+          console.log("Saved to Firestore: ", values);
+        } catch (error) {
+          console.error("Error adding todo:", error);
+        }
+      } else if (activeTab === "income") {
+        values = await incomeForm.validateFields();
+        const selectedDate = new Date(values.date);
+        try {
+          await addDoc(collection(db, "users", user.uid, "transactions"), {
+            toAccount: values.toAccount,
+            category: values?.category,
+            date: Timestamp.fromDate(selectedDate),
+            amount: values?.amount,
+            comments: values?.comments || "",
+            type: "income",
+            createdAt: serverTimestamp(),
+          });
+          console.log("Saved to Firestore: ", values);
+        } catch (error) {
+          console.error("Error adding todo:", error);
+        }
+      }
+      onCreate({ type: activeTab, values });
+      setOpen(false);
+      // console.log(values);
+      resetForms();
+    } catch (error) {
+      console.error("Validation Failed:", error);
+    }
+  };
+
+  const resetForms = () => {
+    expenseForm.resetFields();
+    transferForm.resetFields();
+    incomeForm.resetFields();
   };
 
   return (
@@ -383,28 +476,202 @@ function EnhancedTableToolbar(props) {
           title="New Transaction"
           okText="Create"
           cancelText="Cancel"
-          okButtonProps={{
-            autoFocus: true,
-            htmlType: "submit",
-          }}
           onCancel={() => setOpen(false)}
+          onOk={handleSubmit}
           destroyOnClose
-          modalRender={(dom) => (
-            <Form
-              layout="vertical"
-              form={form}
-              name="form_in_modal"
-              initialValues={{
-                paymentType: "Cash",
-              }}
-              clearOnDestroy
-              onFinish={(values) => onCreate(values)}
-            >
-              {dom}
-            </Form>
-          )}
         >
-          <ModalTab />
+          <Tabs activeKey={activeTab} onChange={setActiveTab}>
+            <Item tab="Expense" key="expense">
+              <Form form={expenseForm} layout="vertical">
+                <div style={{ display: "flex", gap: "16px" }}>
+                  <Form.Item
+                    name="title"
+                    label="Title"
+                    rules={[{ required: true }]}
+                    style={{ flex: 1 }}
+                  >
+                    <Input />
+                  </Form.Item>
+                  <Form.Item
+                    name="category"
+                    label="Category"
+                    rules={[{ required: true }]}
+                    style={{ flex: 1 }}
+                  >
+                    <Select>
+                      <Select.Option value="housing">Housing</Select.Option>
+                      <Select.Option value="food">Food</Select.Option>
+                      <Select.Option value="transportation">
+                        Transportation
+                      </Select.Option>
+                      <Select.Option value="health">Health</Select.Option>
+                      <Select.Option value="kids">Kids</Select.Option>
+                      <Select.Option value="personal">
+                        Personal Care
+                      </Select.Option>
+                      <Select.Option value="clothing">Clothing</Select.Option>
+                      <Select.Option value="gifths">Gifts</Select.Option>
+                      <Select.Option value="savings">Savings</Select.Option>
+                      <Select.Option value="debts">
+                        Debts Payments
+                      </Select.Option>
+                    </Select>
+                  </Form.Item>
+                </div>
+
+                <div style={{ display: "flex", gap: "16px" }}>
+                  <Form.Item
+                    name="date"
+                    label="Date"
+                    style={{ width: "100%" }}
+                    rules={[{ required: true }]}
+                  >
+                    <DatePicker style={{ width: "100%" }} />
+                  </Form.Item>
+                  <Form.Item
+                    name="amount"
+                    label="Amount"
+                    style={{ width: "100%" }}
+                    rules={[{ required: true }]}
+                  >
+                    <InputNumber style={{ width: "100%" }} />
+                  </Form.Item>
+                  <Form.Item
+                    name="account"
+                    label="Account"
+                    style={{ width: "100%" }}
+                    rules={[{ required: true }]}
+                  >
+                    <Select>
+                      <Select.Option value="cash">Cash</Select.Option>
+                      <Select.Option value="debit">Debit Card</Select.Option>
+                      <Select.Option value="credit">Credit Card</Select.Option>
+                    </Select>
+                  </Form.Item>
+                </div>
+
+                <Form.Item name="comments" label="Comments">
+                  <TextArea rows={2} />
+                </Form.Item>
+              </Form>
+            </Item>
+
+            <Item tab="Transfer" key="transfer">
+              <Form form={transferForm} layout="vertical">
+                <div style={{ display: "flex", gap: "16px" }}>
+                  <Form.Item
+                    style={{ flex: 1 }}
+                    name="fromAccount"
+                    rules={[{ required: true }]}
+                    label="From Account"
+                  >
+                    <Select>
+                      <Select.Option value="cash">Cash</Select.Option>
+                      <Select.Option value="debit">Debit Card</Select.Option>
+                      <Select.Option value="credit">Credit Card</Select.Option>
+                    </Select>
+                  </Form.Item>
+                  <Form.Item
+                    style={{ flex: 1 }}
+                    name="toAccount"
+                    rules={[{ required: true }]}
+                    label="To Account"
+                  >
+                    <Select>
+                      <Select.Option value="cash">Cash</Select.Option>
+                      <Select.Option value="debit">Debit Card</Select.Option>
+                      <Select.Option value="credit">Credit Card</Select.Option>
+                    </Select>
+                  </Form.Item>
+                </div>
+
+                <div style={{ display: "flex", gap: "16px" }}>
+                  <Form.Item
+                    rules={[{ required: true }]}
+                    style={{ width: "100%" }}
+                    name="date"
+                    label="Date"
+                  >
+                    <DatePicker style={{ width: "100%" }} />
+                  </Form.Item>
+                  <Form.Item
+                    style={{ width: "100%" }}
+                    rules={[{ required: true }]}
+                    name="amount"
+                    label="Amount"
+                  >
+                    <InputNumber style={{ width: "100%" }} />
+                  </Form.Item>
+                </div>
+                <Form.Item name="comments" label="Comments">
+                  <TextArea rows={2} />
+                </Form.Item>
+              </Form>
+            </Item>
+
+            <Item tab="Income" key="income">
+              <Form form={incomeForm} layout="vertical">
+                <div style={{ display: "flex", gap: "16px" }}>
+                  <Form.Item
+                    style={{ flex: 1 }}
+                    rules={[{ required: true }]}
+                    name="toAccount"
+                    label="To Account"
+                  >
+                    <Select>
+                      <Select.Option value="cash">Cash</Select.Option>
+                      <Select.Option value="debit">Debit Card</Select.Option>
+                      <Select.Option value="credit">Credit Card</Select.Option>
+                    </Select>
+                  </Form.Item>
+                  <Form.Item
+                    style={{ flex: 1 }}
+                    rules={[{ required: true }]}
+                    name="category"
+                    label="Category"
+                  >
+                    <Select>
+                      <Select.Option value="salary">Salary</Select.Option>
+                      <Select.Option value="bonus">Bonus</Select.Option>
+                      <Select.Option value="rental">
+                        Rental Income
+                      </Select.Option>
+                      <Select.Option value="dividend">
+                        Dividend Income
+                      </Select.Option>
+                      <Select.Option value="interest">
+                        Interest Earned
+                      </Select.Option>
+                      <Select.Option value="selfEmployed">
+                        Self-Employed Income
+                      </Select.Option>
+                    </Select>
+                  </Form.Item>
+                </div>
+                <div style={{ display: "flex", gap: "16px" }}>
+                  <Form.Item
+                    rules={[{ required: true }]}
+                    style={{ width: "100%" }}
+                    name="date"
+                    label="Date"
+                  >
+                    <DatePicker style={{ width: "100%" }} />
+                  </Form.Item>
+                  <Form.Item
+                    rules={[{ required: true }]}
+                    style={{ width: "100%" }}
+                    name="amount"
+                    label="Amount"
+                  >
+                    <InputNumber style={{ width: "100%" }} />
+                  </Form.Item>
+                </div>
+                <Form.Item name="comments" label="Comments">
+                  <TextArea rows={2} />
+                </Form.Item>
+              </Form>
+            </Item>
+          </Tabs>
         </Modal>
       </>
     </Toolbar>
@@ -421,6 +688,8 @@ export default function TransactionsPage() {
   const [selected, setSelected] = React.useState([]);
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
+  const user = React.useContext(User).user;
+  const [expenses, setExpenses] = useState([]);
 
   const handleRequestSort = (event, property) => {
     const isAsc = orderBy === property && order === "asc";
@@ -476,6 +745,24 @@ export default function TransactionsPage() {
         .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
     [order, orderBy, page, rowsPerPage]
   );
+
+  const fetchExpenses = async () => {
+    const q = query(
+      collection(db, "users", user.uid, "expenses")
+      // orderBy("date", "desc")
+    );
+    const querySnapshot = await getDocs(q);
+    const fetchedExpenses = querySnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+    setExpenses(fetchedExpenses);
+    console.log(fetchedExpenses);
+  };
+
+  React.useEffect(() => {
+    fetchExpenses();
+  }, [user.uid]);
 
   return (
     <div>

@@ -31,7 +31,6 @@ import {
   orderBy,
 } from "../config/firebase";
 
-
 const dataNew = [
   ["Name", "Expenses"],
   ["Housing", 370],
@@ -155,7 +154,44 @@ export const DashboardPage = () => {
     ["Income", user.income],
     ["Expense", user.expense],
   ];
-  
+
+  const [transactions, setTransactions] = useState([]);
+
+  const formatTimestamp = (timestamp) => {
+    const date = new Date(timestamp * 1000);
+    return new Intl.DateTimeFormat("en-GB", {
+      weekday: "short",
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    })
+      .format(date)
+      .replace(",", ""); // Remove comma
+  };
+
+  const getAllTransactions = async () => {
+    const q = query(
+      collection(db, "users", user.uid, "transactions"),
+      orderBy("date", "desc")
+    );
+    const querySnapshot = await getDocs(q);
+    const fetchedTransactions = querySnapshot.docs.map((doc) => {
+      const timestamp = doc.data().date.seconds;
+      const formattedDate = formatTimestamp(timestamp);
+      console.log(doc.id, " => ", doc.data())
+      console.log(formattedDate);
+      return {
+        id: doc.id,
+        ...doc.data(),
+      };
+    });
+    // console.log(doc)
+    setTransactions(fetchedTransactions);
+  };
+
+  useEffect(() => {
+    getAllTransactions();
+  }, [user.uid]);
 
   return (
     <div>
@@ -179,7 +215,10 @@ export const DashboardPage = () => {
                   Total Balance
                 </Typography>
                 <Typography variant="h5" component="div">
-                  {user.currency} {user.income - user.expense}
+                  {user?.currency}{" "}
+                  {user.income && user?.expense
+                    ? user.income - user.expense
+                    : user?.income || user?.expense}
                 </Typography>
               </CardContent>
             </Card>
@@ -201,7 +240,7 @@ export const DashboardPage = () => {
                   Total Income
                 </Typography>
                 <Typography variant="h5" component="div">
-                  {user.currency} {user.income}
+                  {user?.currency} {user?.income ? user.income : 0}
                 </Typography>
               </CardContent>
             </Card>
@@ -223,7 +262,7 @@ export const DashboardPage = () => {
                   Total Expense
                 </Typography>
                 <Typography variant="h5" component="div">
-                  {user.currency} {user.expense}
+                  {user?.currency} {user?.expense ? user.expense : 0}
                 </Typography>
               </CardContent>
             </Card>

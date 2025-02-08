@@ -29,6 +29,7 @@ import {
   updateDoc,
   deleteDoc,
   orderBy,
+  onSnapshot,
 } from "../config/firebase";
 
 const dataNew = [
@@ -118,18 +119,65 @@ const rows = [
 ];
 
 export const DashboardPage = () => {
+  const user = useContext(User).user;
+  const [transactions, setTransactions] = useState([]);
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
 
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
-  };
+  useEffect(() => {
+    const q = query(
+      collection(db, "users", user.uid, "transactions"),
+      orderBy("date", "desc")
+    );
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const data = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setTransactions(data);
+    });
 
+    return () => unsubscribe();
+  }, [user.uid]);
+
+  const handleChangePage = (event, newPage) => setPage(newPage);
   const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(+event.target.value);
+    setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
-  const user = useContext(User).user;
+
+  // const getAllTransactions = async () => {
+  //     const q = query(
+  //       collection(db, "users", user.uid, "transactions"),
+  //       orderBy("date", "desc")
+  //     );
+  //     const querySnapshot = await getDocs(q);
+  //     const fetchedTransactions = querySnapshot.docs.map((doc) => {
+  //       const timestamp = doc.data().date.seconds;
+  //       const formattedDate = formatTimestamp(timestamp);
+  //       console.log(doc.id, " => ", doc.data())
+  //       console.log(formattedDate);
+  //       return {
+  //         id: doc.id,
+  //         ...doc.data(),
+  //       };
+  //     });
+  //     console.log(doc)
+  //     setTransactions(fetchedTransactions);
+  //   };
+
+  //   useEffect(() => {
+  //     getAllTransactions();
+  //   }, [user.uid]);
+
+  // const handleChangePage = (event, newPage) => {
+  //   setPage(newPage);
+  // };
+
+  // const handleChangeRowsPerPage = (event) => {
+  //   setRowsPerPage(+event.target.value);
+  //   setPage(0);
+  // };
   const month = [
     "Jan",
     "Feb",
@@ -155,43 +203,17 @@ export const DashboardPage = () => {
     ["Expense", user.expense],
   ];
 
-  const [transactions, setTransactions] = useState([]);
-
-  const formatTimestamp = (timestamp) => {
-    const date = new Date(timestamp * 1000);
-    return new Intl.DateTimeFormat("en-GB", {
-      weekday: "short",
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    })
-      .format(date)
-      .replace(",", ""); // Remove comma
-  };
-
-  const getAllTransactions = async () => {
-    const q = query(
-      collection(db, "users", user.uid, "transactions"),
-      orderBy("date", "desc")
-    );
-    const querySnapshot = await getDocs(q);
-    const fetchedTransactions = querySnapshot.docs.map((doc) => {
-      const timestamp = doc.data().date.seconds;
-      const formattedDate = formatTimestamp(timestamp);
-      console.log(doc.id, " => ", doc.data())
-      console.log(formattedDate);
-      return {
-        id: doc.id,
-        ...doc.data(),
-      };
-    });
-    // console.log(doc)
-    setTransactions(fetchedTransactions);
-  };
-
-  useEffect(() => {
-    getAllTransactions();
-  }, [user.uid]);
+  // const formatTimestamp = (timestamp) => {
+  //   const date = new Date(timestamp * 1000);
+  //   return new Intl.DateTimeFormat("en-GB", {
+  //     weekday: "short",
+  //     day: "2-digit",
+  //     month: "short",
+  //     year: "numeric",
+  //   })
+  //     .format(date)
+  //     .replace(",", ""); // Remove comma
+  // };
 
   return (
     <div>
@@ -365,43 +387,40 @@ export const DashboardPage = () => {
                         </TableRow>
                       </TableHead>
                       <TableBody>
-                        {rows
+                        {transactions
                           .slice(
                             page * rowsPerPage,
                             page * rowsPerPage + rowsPerPage
                           )
-                          .map((row) => {
-                            return (
-                              <TableRow
-                                hover
-                                role="checkbox"
-                                tabIndex={-1}
-                                key={row.code}
+                          .map((item) => (
+                            <TableRow
+                              hover
+                              key={item.id}
                               >
-                                {columns.map((column) => {
-                                  const value = row[column.id];
-                                  return (
-                                    <TableCell
-                                      key={column.id}
-                                      align={column.align}
-                                    >
-                                      {column.format &&
-                                      typeof value === "number"
-                                        ? column.format(value)
-                                        : value}
-                                    </TableCell>
-                                  );
+                              <TableCell>
+                                {new Date(
+                                  item.date.seconds * 1000
+                                ).toLocaleDateString("en-GB", {
+                                  weekday: "short",
+                                  day: "2-digit",
+                                  month: "short",
+                                  year: "numeric",
                                 })}
-                              </TableRow>
-                            );
-                          })}
+                              </TableCell>
+                              <TableCell>{item.title}</TableCell>
+                              <TableCell>{item.amount}</TableCell>
+                              <TableCell>{item.category}</TableCell>
+                              <TableCell>{item.mode}</TableCell>
+                              <TableCell>{item.comments}</TableCell>
+                            </TableRow>
+                          ))}
                       </TableBody>
                     </Table>
                   </TableContainer>
                   <TablePagination
                     rowsPerPageOptions={[5, 10, 15, 20, 25]}
                     component="div"
-                    count={rows.length}
+                    count={transactions.length}
                     rowsPerPage={rowsPerPage}
                     page={page}
                     onPageChange={handleChangePage}

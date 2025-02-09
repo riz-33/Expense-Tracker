@@ -48,7 +48,6 @@ const onSubmit = async (data) => {
       email: data.email,
       password: data.password,
       number: data.phone,
-      income:data.income,
       currency: 'PKR',
       uid: response.user.uid,
       createdAt: serverTimestamp(),
@@ -182,7 +181,7 @@ const RegisterForm = () => {
               />
             </Form.Item>
 
-            <Form.Item
+            {/* <Form.Item
               name="income"
               rules={[
                 {
@@ -199,7 +198,7 @@ const RegisterForm = () => {
                   width: "100%",
                 }}
               />
-            </Form.Item>
+            </Form.Item> */}
 
             <Form.Item label={null}>
               <Button block type="primary" htmlType="submit">

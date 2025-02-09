@@ -55,115 +55,11 @@ import {
   updateDoc,
   deleteDoc,
   orderBy,
+  onSnapshot,
 } from "../config/firebase";
 import User from "../context/user";
 import { Timestamp } from "firebase/firestore";
 import Item from "antd/es/list/Item";
-
-function createData(id, name, amount, date, category, account, comments) {
-  return {
-    id,
-    name,
-    amount,
-    date,
-    category,
-    account,
-    comments,
-  };
-}
-
-const rows = [
-  createData(
-    1,
-    "Grocery",
-    "20,000",
-    "Tue 21 Jan 2025",
-    "Housing",
-    "Card",
-    "Monthly Grocery"
-  ),
-  createData(2, "Eggs", "500", "Wed 22 Jan 2025", "Food", "Cash", "Eggs"),
-  createData(
-    3,
-    "Fuel",
-    "1,000",
-    "Thu 23 Jan 2025",
-    "Transportation",
-    "Card",
-    "Fuel"
-  ),
-  createData(
-    4,
-    "Hospital",
-    "2,000",
-    "Fri 24 Jan 2025",
-    "Health",
-    "Card",
-    "Routine Checkup"
-  ),
-  createData(
-    5,
-    "Formal",
-    "8,000",
-    "Sat 25 Jan 2025",
-    "Clothing",
-    "Cash",
-    "Pent Shirt"
-  ),
-  createData(
-    6,
-    "Grocery",
-    "20,000",
-    "Tue 21 Jan 2025",
-    "Housing",
-    "Card",
-    "Monthly Grocery"
-  ),
-  createData(7, "Eggs", "500", "Wed 22 Jan 2025", "Food", "Cash", "Eggs"),
-  createData(
-    8,
-    "Fuel",
-    "1,000",
-    "Thu 23 Jan 2025",
-    "Transportation",
-    "Card",
-    "Fuel"
-  ),
-  createData(
-    9,
-    "Hospital",
-    "2,000",
-    "Fri 24 Jan 2025",
-    "Health",
-    "Card",
-    "Routine Checkup"
-  ),
-  createData(
-    10,
-    "Formal",
-    "8,000",
-    "Sat 25 Jan 2025",
-    "Clothing",
-    "Cash",
-    "Pent Shirt"
-  ),
-];
-
-function descendingComparator(a, b, orderBy) {
-  if (b[orderBy] < a[orderBy]) {
-    return -1;
-  }
-  if (b[orderBy] > a[orderBy]) {
-    return 1;
-  }
-  return 0;
-}
-
-function getComparator(order, orderBy) {
-  return order === "desc"
-    ? (a, b) => descendingComparator(a, b, orderBy)
-    : (a, b) => -descendingComparator(a, b, orderBy);
-}
 
 const headCells = [
   {
@@ -281,31 +177,8 @@ function EnhancedTableToolbar(props) {
     setOpenEdit(false);
   };
 
-  const addExpense = async (data) => {
-    const selectedDate = new Date(data.date);
-    try {
-      await addDoc(collection(db, "users", user.uid, "expenses"), {
-        title: data.title,
-        category: data?.category,
-        date: Timestamp.fromDate(selectedDate),
-        amount: data?.amount,
-        account: data?.account,
-        comments: data?.comments || "",
-        // createdAt: serverTimestamp(),
-      });
-      console.log("Received data of form: ", data);
-    } catch (error) {
-      console.error("Error adding todo:", error);
-    }
-  };
-
-  // const [form] = Form.useForm();
-  // const [formValues, setFormValues] = useState();
   const onCreate = async (values) => {
     console.log("Received values of form: ", values);
-    // setFormValues(values);
-    // setOpen(false);
-    // await addExpense(values);
   };
 
   const [activeTab, setActiveTab] = useState("expense");
@@ -328,7 +201,7 @@ function EnhancedTableToolbar(props) {
             amount: values?.amount,
             mode: values?.account,
             comments: values?.comments || "",
-            type: "expense",
+            type: "Expense",
             createdAt: serverTimestamp(),
           });
           console.log("Saved to Firestore: ", values);
@@ -345,7 +218,7 @@ function EnhancedTableToolbar(props) {
             date: Timestamp.fromDate(selectedDate),
             amount: values?.amount,
             comments: values?.comments || "",
-            type: "transfer",
+            type: "Transfer",
             createdAt: serverTimestamp(),
           });
           console.log("Saved to Firestore: ", values);
@@ -362,7 +235,7 @@ function EnhancedTableToolbar(props) {
             date: Timestamp.fromDate(selectedDate),
             amount: values?.amount,
             comments: values?.comments || "",
-            type: "income",
+            type: "Income",
             createdAt: serverTimestamp(),
           });
           console.log("Saved to Firestore: ", values);
@@ -499,20 +372,20 @@ function EnhancedTableToolbar(props) {
                     style={{ flex: 1 }}
                   >
                     <Select>
-                      <Select.Option value="housing">Housing</Select.Option>
-                      <Select.Option value="food">Food</Select.Option>
-                      <Select.Option value="transportation">
+                      <Select.Option value="Housing">Housing</Select.Option>
+                      <Select.Option value="Food">Food</Select.Option>
+                      <Select.Option value="Transportation">
                         Transportation
                       </Select.Option>
-                      <Select.Option value="health">Health</Select.Option>
-                      <Select.Option value="kids">Kids</Select.Option>
-                      <Select.Option value="personal">
+                      <Select.Option value="Health">Health</Select.Option>
+                      <Select.Option value="Kids">Kids</Select.Option>
+                      <Select.Option value="Personal Care">
                         Personal Care
                       </Select.Option>
-                      <Select.Option value="clothing">Clothing</Select.Option>
-                      <Select.Option value="gifths">Gifts</Select.Option>
-                      <Select.Option value="savings">Savings</Select.Option>
-                      <Select.Option value="debts">
+                      <Select.Option value="Clothing">Clothing</Select.Option>
+                      <Select.Option value="Gifths">Gifts</Select.Option>
+                      <Select.Option value="Savings">Savings</Select.Option>
+                      <Select.Option value="Debts Payments">
                         Debts Payments
                       </Select.Option>
                     </Select>
@@ -543,9 +416,13 @@ function EnhancedTableToolbar(props) {
                     rules={[{ required: true }]}
                   >
                     <Select>
-                      <Select.Option value="cash">Cash</Select.Option>
-                      <Select.Option value="debit">Debit Card</Select.Option>
-                      <Select.Option value="credit">Credit Card</Select.Option>
+                      <Select.Option value="Cash">Cash</Select.Option>
+                      <Select.Option value="Debit Card">
+                        Debit Card
+                      </Select.Option>
+                      <Select.Option value="Credit Card">
+                        Credit Card
+                      </Select.Option>
                     </Select>
                   </Form.Item>
                 </div>
@@ -566,9 +443,13 @@ function EnhancedTableToolbar(props) {
                     label="From Account"
                   >
                     <Select>
-                      <Select.Option value="cash">Cash</Select.Option>
-                      <Select.Option value="debit">Debit Card</Select.Option>
-                      <Select.Option value="credit">Credit Card</Select.Option>
+                      <Select.Option value="Cash">Cash</Select.Option>
+                      <Select.Option value="Debit Card">
+                        Debit Card
+                      </Select.Option>
+                      <Select.Option value="Credit Card">
+                        Credit Card
+                      </Select.Option>
                     </Select>
                   </Form.Item>
                   <Form.Item
@@ -578,9 +459,13 @@ function EnhancedTableToolbar(props) {
                     label="To Account"
                   >
                     <Select>
-                      <Select.Option value="cash">Cash</Select.Option>
-                      <Select.Option value="debit">Debit Card</Select.Option>
-                      <Select.Option value="credit">Credit Card</Select.Option>
+                      <Select.Option value="Cash">Cash</Select.Option>
+                      <Select.Option value="Debit Card">
+                        Debit Card
+                      </Select.Option>
+                      <Select.Option value="Credit Card">
+                        Credit Card
+                      </Select.Option>
                     </Select>
                   </Form.Item>
                 </div>
@@ -619,9 +504,13 @@ function EnhancedTableToolbar(props) {
                     label="To Account"
                   >
                     <Select>
-                      <Select.Option value="cash">Cash</Select.Option>
-                      <Select.Option value="debit">Debit Card</Select.Option>
-                      <Select.Option value="credit">Credit Card</Select.Option>
+                      <Select.Option value="Cash">Cash</Select.Option>
+                      <Select.Option value="Debit Card">
+                        Debit Card
+                      </Select.Option>
+                      <Select.Option value="Credit Card">
+                        Credit Card
+                      </Select.Option>
                     </Select>
                   </Form.Item>
                   <Form.Item
@@ -631,18 +520,18 @@ function EnhancedTableToolbar(props) {
                     label="Category"
                   >
                     <Select>
-                      <Select.Option value="salary">Salary</Select.Option>
-                      <Select.Option value="bonus">Bonus</Select.Option>
-                      <Select.Option value="rental">
+                      <Select.Option value="Salary">Salary</Select.Option>
+                      <Select.Option value="Bonus">Bonus</Select.Option>
+                      <Select.Option value="Rental Income">
                         Rental Income
                       </Select.Option>
-                      <Select.Option value="dividend">
+                      <Select.Option value="Dividend Income">
                         Dividend Income
                       </Select.Option>
-                      <Select.Option value="interest">
+                      <Select.Option value="Interest Earned">
                         Interest Earned
                       </Select.Option>
-                      <Select.Option value="selfEmployed">
+                      <Select.Option value="Self Employed">
                         Self-Employed Income
                       </Select.Option>
                     </Select>
@@ -683,13 +572,28 @@ EnhancedTableToolbar.propTypes = {
 };
 
 export default function TransactionsPage() {
-  const [order, setOrder] = React.useState("asc");
-  const [orderBy, setOrderBy] = React.useState("calories");
   const [selected, setSelected] = React.useState([]);
-  const [page, setPage] = React.useState(0);
-  const [rowsPerPage, setRowsPerPage] = React.useState(10);
   const user = React.useContext(User).user;
-  const [expenses, setExpenses] = useState([]);
+  const [transactions, setTransactions] = useState([]);
+  const [order, setOrder] = useState("asc");
+  const [orderBy, setOrderBy] = useState("date");
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+
+  React.useEffect(() => {
+    const unsubscribe = onSnapshot(
+      collection(db, "users", user.uid, "transactions"),
+      (snapshot) => {
+        const data = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setTransactions(data);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [user.uid]);
 
   const handleRequestSort = (event, property) => {
     const isAsc = orderBy === property && order === "asc";
@@ -699,30 +603,18 @@ export default function TransactionsPage() {
 
   const handleSelectAllClick = (event) => {
     if (event.target.checked) {
-      const newSelected = rows.map((n) => n.id);
-      setSelected(newSelected);
-      return;
+      setSelected(transactions.map((row) => row.id));
+    } else {
+      setSelected([]);
     }
-    setSelected([]);
   };
 
   const handleClick = (event, id) => {
-    const selectedIndex = selected.indexOf(id);
-    let newSelected = [];
-
-    if (selectedIndex === -1) {
-      newSelected = newSelected.concat(selected, id);
-    } else if (selectedIndex === 0) {
-      newSelected = newSelected.concat(selected.slice(1));
-    } else if (selectedIndex === selected.length - 1) {
-      newSelected = newSelected.concat(selected.slice(0, -1));
-    } else if (selectedIndex > 0) {
-      newSelected = newSelected.concat(
-        selected.slice(0, selectedIndex),
-        selected.slice(selectedIndex + 1)
-      );
-    }
-    setSelected(newSelected);
+    setSelected((prevSelected) =>
+      prevSelected.includes(id)
+        ? prevSelected.filter((item) => item !== id)
+        : [...prevSelected, id]
+    );
   };
 
   const handleChangePage = (event, newPage) => {
@@ -734,35 +626,19 @@ export default function TransactionsPage() {
     setPage(0);
   };
 
-  // Avoid a layout jump when reaching the last page with empty rows.
-  const emptyRows =
-    page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0;
+  const sortedRows = transactions.sort((a, b) => {
+    if (order === "asc") {
+      return a[orderBy] > b[orderBy] ? 1 : -1;
+    } else {
+      return a[orderBy] < b[orderBy] ? 1 : -1;
+    }
+  });
 
-  const visibleRows = React.useMemo(
-    () =>
-      [...rows]
-        .sort(getComparator(order, orderBy))
-        .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
-    [order, orderBy, page, rowsPerPage]
+  const visibleRows = sortedRows.slice(
+    page * rowsPerPage,
+    page * rowsPerPage + rowsPerPage
   );
-
-  const fetchExpenses = async () => {
-    const q = query(
-      collection(db, "users", user.uid, "expenses")
-      // orderBy("date", "desc")
-    );
-    const querySnapshot = await getDocs(q);
-    const fetchedExpenses = querySnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
-    setExpenses(fetchedExpenses);
-    console.log(fetchedExpenses);
-  };
-
-  React.useEffect(() => {
-    fetchExpenses();
-  }, [user.uid]);
+  const emptyRows = rowsPerPage - visibleRows.length;
 
   return (
     <div>
@@ -789,79 +665,85 @@ export default function TransactionsPage() {
       <Grid padding={2} container>
         <Grid item xs={12}>
           <Card sx={{ minWidth: 275 }}>
-            <Box sx={{ width: "100%" }}>
-              <Paper sx={{ width: "100%", mb: 2 }}>
-                <EnhancedTableToolbar numSelected={selected.length} />
-                <TableContainer>
-                  <Table sx={{ minWidth: 750 }} aria-labelledby="tableTitle">
-                    <EnhancedTableHead
-                      numSelected={selected.length}
-                      order={order}
-                      orderBy={orderBy}
-                      onSelectAllClick={handleSelectAllClick}
-                      onRequestSort={handleRequestSort}
-                      rowCount={rows.length}
-                    />
-                    <TableBody>
-                      {visibleRows.map((row, index) => {
-                        const isItemSelected = selected.includes(row.id);
-                        const labelId = `enhanced-table-checkbox-${index}`;
-
-                        return (
-                          <TableRow
-                            hover
-                            onClick={(event) => handleClick(event, row.id)}
-                            role="checkbox"
-                            aria-checked={isItemSelected}
-                            tabIndex={-1}
-                            key={row.id}
-                            selected={isItemSelected}
-                            sx={{ cursor: "pointer" }}
-                          >
-                            <TableCell padding="checkbox">
-                              <Checkbox
-                                color="primary"
-                                checked={isItemSelected}
-                                inputProps={{
-                                  "aria-labelledby": labelId,
-                                }}
-                              />
-                            </TableCell>
-                            <TableCell
-                              component="th"
-                              id={labelId}
-                              scope="row"
-                              padding="none"
-                            >
-                              {row.name}
-                            </TableCell>
-                            <TableCell align="center">{row.amount}</TableCell>
-                            <TableCell align="center">{row.date}</TableCell>
-                            <TableCell align="center">{row.category}</TableCell>
-                            <TableCell align="center">{row.account}</TableCell>
-                            <TableCell align="center">{row.comments}</TableCell>
-                          </TableRow>
-                        );
-                      })}
-                      {emptyRows > 0 && (
-                        <TableRow style={{}}>
-                          <TableCell colSpan={6} />
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-                <TablePagination
-                  rowsPerPageOptions={[10, 15, 25, 50]}
-                  component="div"
-                  count={rows.length}
-                  rowsPerPage={rowsPerPage}
-                  page={page}
-                  onPageChange={handleChangePage}
-                  onRowsPerPageChange={handleChangeRowsPerPage}
+            <EnhancedTableToolbar numSelected={selected.length} />
+            <TableContainer>
+              <Table sx={{ minWidth: 750 }} aria-labelledby="tableTitle">
+                <EnhancedTableHead
+                  numSelected={selected.length}
+                  order={order}
+                  orderBy={orderBy}
+                  onSelectAllClick={handleSelectAllClick}
+                  onRequestSort={handleRequestSort}
+                  rowCount={transactions.length}
                 />
-              </Paper>
-            </Box>
+                <TableBody>
+                  {visibleRows.map((row, index) => {
+                    const isItemSelected = selected.includes(row.id);
+                    const labelId = `enhanced-table-checkbox-${index}`;
+
+                    return (
+                      <TableRow
+                        hover
+                        onClick={(event) => handleClick(event, row.id)}
+                        role="checkbox"
+                        aria-checked={isItemSelected}
+                        tabIndex={-1}
+                        key={row.id}
+                        selected={isItemSelected}
+                        sx={{ cursor: "pointer" }}
+                      >
+                        <TableCell padding="checkbox">
+                          <Checkbox
+                            color="primary"
+                            checked={isItemSelected}
+                            inputProps={{
+                              "aria-labelledby": labelId,
+                            }}
+                          />
+                        </TableCell>
+                        <TableCell
+                          component="th"
+                          id={labelId}
+                          scope="row"
+                          padding="none"
+                        >
+                          {row.title}
+                        </TableCell>
+                        <TableCell align="center">{row.amount}</TableCell>
+                        <TableCell align="center">
+                          {new Date(row.date.seconds * 1000).toLocaleDateString(
+                            "en-GB",
+                            {
+                              weekday: "short",
+                              day: "2-digit",
+                              month: "short",
+                              year: "numeric",
+                            }
+                          )}
+                        </TableCell>
+                        <TableCell align="center">{row.category}</TableCell>
+                        <TableCell align="center">{row.mode}</TableCell>
+                        <TableCell align="center">{row.comments}</TableCell>
+                      </TableRow>
+                    );
+                  })}
+                  {emptyRows > 0 && (
+                    <TableRow>
+                      <TableCell colSpan={6} />
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+            <TablePagination
+              rowsPerPageOptions={[10, 15, 25, 50]}
+              component="div"
+              count={transactions.length}
+              rowsPerPage={rowsPerPage}
+              page={page}
+              onPageChange={handleChangePage}
+              onRowsPerPageChange={handleChangeRowsPerPage}
+            />
           </Card>
         </Grid>
       </Grid>

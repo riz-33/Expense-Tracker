@@ -17,167 +17,23 @@ import {
 import User from "../context/user";
 import { useContext, useEffect, useState } from "react";
 import {
-  auth,
-  signOut,
   collection,
-  addDoc,
   db,
-  serverTimestamp,
   query,
-  doc,
-  getDocs,
-  updateDoc,
-  deleteDoc,
   orderBy,
   onSnapshot,
 } from "../config/firebase";
 
-const dataNew = [
-  ["Name", "Expenses"],
-  ["Housing", 370],
-  ["Food", 600],
-  ["Transportation", 700],
-  ["Health", 1500],
-  ["Kids", 370],
-  ["Personal Care", 600],
-  ["Clothing", 700],
-  ["Gifts", 1500],
-  ["Savings", 370],
-  ["Debt Payments", 600],
-];
-
-const data3 = [
-  ["Month", "Income", "Expense"],
-  ["Jan", 1000, 400],
-  ["Feb", 1170, 460],
-  ["Mar", 660, 1120],
-  ["Apr", 1030, 540],
-  ["May", 1000, 400],
-  ["Jun", 1170, 460],
-  ["Jul", 660, 1120],
-  ["Aug", 1030, 540],
-  ["Sep", 1000, 400],
-  ["Oct", 1170, 460],
-  ["Nov", 660, 1120],
-  ["Dec", 1030, 540],
-];
-
-const options = {
-  title: "Monthly Summary",
-  curveType: "function",
-  legend: { position: "bottom" },
-};
-
 const columns = [
-  { id: "date", label: "Date", minWidth: 120 },
-  { id: "name", label: "Name", minWidth: 80, align: "left" },
-  { id: "amount", label: "Amount", minWidth: 80, align: "center" },
-  { id: "category", label: "Category", minWidth: 120, align: "left" },
-  { id: "account", label: "Account", minWidth: 120, align: "left" },
-  { id: "comments", label: "Comments", minWidth: 170, align: "left" },
-];
-
-function createData(name, amount, date, category, account, comments) {
-  // const density = population / size;
-  return { name, amount, date, category, account, comments };
-}
-
-const rows = [
-  createData(
-    "Grocery",
-    "20,000",
-    "Tue 21 Jan 2025",
-    "Housing",
-    "Card",
-    "Monthly Grocery"
-  ),
-  createData("Eggs", "500", "Wed 22 Jan 2025", "Food", "Cash", "Eggs"),
-  createData(
-    "Fuel",
-    "1,000",
-    "Thu 23 Jan 2025",
-    "Transportation",
-    "Card",
-    "Fuel"
-  ),
-  createData(
-    "Hospital",
-    "2,000",
-    "Fri 24 Jan 2025",
-    "Health",
-    "Card",
-    "Routine Checkup"
-  ),
-  createData(
-    "Formal",
-    "8,000",
-    "Sat 25 Jan 2025",
-    "Clothing",
-    "Cash",
-    "Pent Shirt"
-  ),
+  { id: "date", label: "Date", minWidth: 170 },
+  { id: "name", label: "Name", minWidth: 150, align: "left" },
+  { id: "amount", label: "Amount", minWidth: 100, align: "left" },
+  { id: "category", label: "Category", minWidth: 150, align: "left" },
+  { id: "account", label: "Account", minWidth: 150, align: "left" },
+  { id: "comments", label: "Comments", minWidth: 150, align: "left" },
 ];
 
 export const DashboardPage = () => {
-  const user = useContext(User).user;
-  const [transactions, setTransactions] = useState([]);
-  const [page, setPage] = React.useState(0);
-  const [rowsPerPage, setRowsPerPage] = React.useState(5);
-
-  useEffect(() => {
-    const q = query(
-      collection(db, "users", user.uid, "transactions"),
-      orderBy("date", "desc")
-    );
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setTransactions(data);
-    });
-
-    return () => unsubscribe();
-  }, [user.uid]);
-
-  const handleChangePage = (event, newPage) => setPage(newPage);
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
-
-  // const getAllTransactions = async () => {
-  //     const q = query(
-  //       collection(db, "users", user.uid, "transactions"),
-  //       orderBy("date", "desc")
-  //     );
-  //     const querySnapshot = await getDocs(q);
-  //     const fetchedTransactions = querySnapshot.docs.map((doc) => {
-  //       const timestamp = doc.data().date.seconds;
-  //       const formattedDate = formatTimestamp(timestamp);
-  //       console.log(doc.id, " => ", doc.data())
-  //       console.log(formattedDate);
-  //       return {
-  //         id: doc.id,
-  //         ...doc.data(),
-  //       };
-  //     });
-  //     console.log(doc)
-  //     setTransactions(fetchedTransactions);
-  //   };
-
-  //   useEffect(() => {
-  //     getAllTransactions();
-  //   }, [user.uid]);
-
-  // const handleChangePage = (event, newPage) => {
-  //   setPage(newPage);
-  // };
-
-  // const handleChangeRowsPerPage = (event) => {
-  //   setRowsPerPage(+event.target.value);
-  //   setPage(0);
-  // };
   const month = [
     "Jan",
     "Feb",
@@ -196,24 +52,147 @@ export const DashboardPage = () => {
   const d = new Date();
   const currentMonth = month[d.getMonth()];
   const currentYear = new Date().getFullYear();
+  const user = useContext(User).user;
+  const [totalIncome, setTotalIncome] = useState(0);
+  const [totalExpense, setTotalExpense] = useState(0);
+  const [columnChartData, setColumnChartData] = useState([
+    ["Category", "Expense"],
+  ]);
+  const [lineChartData, setLineChartData] = useState([["Month"]]);
+  const [transactions, setTransactions] = useState([]);
+  const [page, setPage] = React.useState(0);
+  const [rowsPerPage, setRowsPerPage] = React.useState(5);
 
-  const data = [
-    ["Summary", "Income & Expenses"],
-    ["Income", user.income],
-    ["Expense", user.expense],
+  useEffect(() => {
+    const unsubscribe = onSnapshot(
+      collection(db, "users", user.uid, "transactions"),
+      (snapshot) => {
+        let income = 0;
+        let expense = 0;
+        let categoryData = {};
+        let yearlyData = {};
+        let categories = new Set();
+
+        const now = new Date();
+        const firstDay =
+          new Date(now.getFullYear(), now.getMonth(), 1).getTime() / 1000;
+        const lastDay =
+          new Date(
+            now.getFullYear(),
+            now.getMonth() + 1,
+            0,
+            23,
+            59,
+            59
+          ).getTime() / 1000;
+
+        snapshot.docs.forEach((doc) => {
+          const data = doc.data();
+          const transactionTime = data.date?.seconds;
+
+          if (transactionTime >= firstDay && transactionTime <= lastDay) {
+            if (data.type === "Income") {
+              income += data.amount;
+            } else if (data.type === "Expense") {
+              expense += data.amount;
+            }
+          }
+
+          if (
+            transactionTime >= firstDay &&
+            transactionTime <= lastDay &&
+            data.type === "Expense"
+          ) {
+            const category = data.category || "Other"; // Default to "Other" if category is missing
+
+            if (!categoryData[category]) {
+              categoryData[category] = 0;
+            }
+
+            categoryData[category] += data.amount;
+          }
+
+          if (data.type === "Expense" && transactionTime) {
+            const date = new Date(transactionTime * 1000);
+            const monthKey = `${date.getFullYear()}-${date.getMonth() + 1}`; // "YYYY-M"
+
+            const category = data.category || "Other";
+            categories.add(category);
+
+            if (!yearlyData[monthKey]) {
+              yearlyData[monthKey] = {};
+            }
+
+            if (!yearlyData[monthKey][category]) {
+              yearlyData[monthKey][category] = 0;
+            }
+
+            yearlyData[monthKey][category] += data.amount;
+          }
+        });
+
+        setTotalIncome(income);
+        setTotalExpense(expense);
+
+        const chartArray = [["Category", "Expense"]];
+        Object.keys(categoryData).forEach((category) => {
+          chartArray.push([category, categoryData[category]]);
+        });
+        setColumnChartData(chartArray);
+
+        if (categories.size === 0) {
+          setLineChartData([]);
+          return;
+        }
+
+        const months = Array.from(
+          { length: 12 },
+          (_, i) => `${new Date().getFullYear()}-${i + 1}`
+        );
+
+        const lineChartArray = [["Month", ...categories]];
+        months.forEach((month) => {
+          const row = [month];
+          categories.forEach((category) => {
+            row.push(yearlyData[month]?.[category] || 0); // Default to 0 if no data
+          });
+          lineChartArray.push(row);
+        });
+        setLineChartData(lineChartArray);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [user.uid]);
+
+  const chartData = [
+    ["Category", "Amount"],
+    ["Income", totalIncome],
+    ["Expense", totalExpense],
   ];
 
-  // const formatTimestamp = (timestamp) => {
-  //   const date = new Date(timestamp * 1000);
-  //   return new Intl.DateTimeFormat("en-GB", {
-  //     weekday: "short",
-  //     day: "2-digit",
-  //     month: "short",
-  //     year: "numeric",
-  //   })
-  //     .format(date)
-  //     .replace(",", ""); // Remove comma
-  // };
+  useEffect(() => {
+    const q = query(
+      collection(db, "users", user.uid, "transactions"),
+      orderBy("date", "desc")
+      // , where("type", "==", "expense")
+    );
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const data = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setTransactions(data);
+    });
+
+    return () => unsubscribe();
+  }, [user.uid]);
+
+  const handleChangePage = (event, newPage) => setPage(newPage);
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
 
   return (
     <div>
@@ -226,7 +205,6 @@ export const DashboardPage = () => {
                 alignItems: "center",
                 justifyContent: "center",
                 display: "flex",
-                // backgroundColor: "lightgrey",
               }}
             >
               <CardContent style={{ textAlign: "center" }}>
@@ -237,10 +215,7 @@ export const DashboardPage = () => {
                   Total Balance
                 </Typography>
                 <Typography variant="h5" component="div">
-                  {user?.currency}{" "}
-                  {user.income && user?.expense
-                    ? user.income - user.expense
-                    : user?.income || user?.expense}
+                  {user?.currency} {totalIncome - totalExpense}
                 </Typography>
               </CardContent>
             </Card>
@@ -262,7 +237,7 @@ export const DashboardPage = () => {
                   Total Income
                 </Typography>
                 <Typography variant="h5" component="div">
-                  {user?.currency} {user?.income ? user.income : 0}
+                  {user?.currency} {totalIncome ? totalIncome : 0}
                 </Typography>
               </CardContent>
             </Card>
@@ -284,7 +259,7 @@ export const DashboardPage = () => {
                   Total Expense
                 </Typography>
                 <Typography variant="h5" component="div">
-                  {user?.currency} {user?.expense ? user.expense : 0}
+                  {user?.currency} {totalExpense ? totalExpense : 0}
                 </Typography>
               </CardContent>
             </Card>
@@ -320,16 +295,15 @@ export const DashboardPage = () => {
             <Card style={{ backgroundColor: "lightgrey" }}>
               <Chart
                 chartType="PieChart"
-                data={data}
+                data={chartData}
                 width={"100%"}
                 height={"400px"}
                 options={{
-                  title: "Summary",
+                  title: "Income vs Expense",
                   legend: { position: "bottom" },
-                  animation: {
-                    duration: 1000,
-                    easing: "out",
-                  },
+                  pieHole: 0.5, // Donut chart effect
+                  animation: { duration: 1000, easing: "out" },
+                  backgroundColor: "lightGrey",
                 }}
               />
             </Card>
@@ -340,7 +314,15 @@ export const DashboardPage = () => {
                 chartType="ColumnChart"
                 width="100%"
                 height="400px"
-                data={dataNew}
+                data={columnChartData}
+                options={{
+                  title: "Expenses by Category",
+                  chartArea: { width: "70%" },
+                  hAxis: { title: "Category" },
+                  vAxis: { title: "Amount" },
+                  animation: { duration: 1000, easing: "out" },
+                  legend: { position: "none" },
+                }}
               />
             </Card>
           </Grid>
@@ -354,8 +336,15 @@ export const DashboardPage = () => {
                 chartType="LineChart"
                 width="100%"
                 height="400px"
-                data={data3}
-                options={options}
+                data={lineChartData}
+                options={{
+                  title: "Monthly Expenses by Category",
+                  chartArea: { width: "80%" },
+                  hAxis: { title: "Month" },
+                  vAxis: { title: "Amount Spent" },
+                  legend: { position: "bottom" },
+                  animation: { duration: 1000, easing: "out" },
+                }}
               />
             </Card>
           </Grid>
@@ -393,10 +382,7 @@ export const DashboardPage = () => {
                             page * rowsPerPage + rowsPerPage
                           )
                           .map((item) => (
-                            <TableRow
-                              hover
-                              key={item.id}
-                              >
+                            <TableRow hover key={item.id}>
                               <TableCell>
                                 {new Date(
                                   item.date.seconds * 1000
@@ -407,11 +393,17 @@ export const DashboardPage = () => {
                                   year: "numeric",
                                 })}
                               </TableCell>
-                              <TableCell>{item.title}</TableCell>
-                              <TableCell>{item.amount}</TableCell>
-                              <TableCell>{item.category}</TableCell>
-                              <TableCell>{item.mode}</TableCell>
-                              <TableCell>{item.comments}</TableCell>
+                              <TableCell>
+                                {item?.title ? item.title : item.type}
+                              </TableCell>
+                              <TableCell>{item?.amount}</TableCell>
+                              <TableCell>
+                                {item?.category ? item.category : item.type}
+                              </TableCell>
+                              <TableCell>
+                                {item?.mode ? item.mode : item.toAccount}
+                              </TableCell>
+                              <TableCell>{item?.comments}</TableCell>
                             </TableRow>
                           ))}
                       </TableBody>

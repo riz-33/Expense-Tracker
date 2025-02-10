@@ -8,6 +8,7 @@ import ModeEditIcon from "@mui/icons-material/ModeEdit";
 import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { ExclamationCircleFilled } from "@ant-design/icons";
 // import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { useState } from "react";
 import {
@@ -62,42 +63,12 @@ import { Timestamp } from "firebase/firestore";
 import Item from "antd/es/list/Item";
 
 const headCells = [
-  {
-    id: "name",
-    numeric: false,
-    disablePadding: true,
-    label: "Name",
-  },
-  {
-    id: "amount",
-    numeric: true,
-    disablePadding: false,
-    label: "Amount",
-  },
-  {
-    id: "date",
-    numeric: true,
-    disablePadding: false,
-    label: "Date",
-  },
-  {
-    id: "category",
-    numeric: true,
-    disablePadding: false,
-    label: "Category",
-  },
-  {
-    id: "account",
-    numeric: true,
-    disablePadding: false,
-    label: "Account",
-  },
-  {
-    id: "comments",
-    numeric: true,
-    disablePadding: false,
-    label: "Comments",
-  },
+  { id: "name", label: "Name", minWidth: 150, align: "left" },
+  { id: "amount", label: "Amount", minWidth: 100, align: "left" },
+  { id: "date", label: "Date", minWidth: 170 },
+  { id: "category", label: "Category", minWidth: 150, align: "left" },
+  { id: "account", label: "Account", minWidth: 150, align: "left" },
+  { id: "comments", label: "Comments", minWidth: 150, align: "left" },
 ];
 
 function EnhancedTableHead(props) {
@@ -258,6 +229,28 @@ function EnhancedTableToolbar(props) {
     incomeForm.resetFields();
   };
 
+  const { confirm } = Modal;
+  const showDeleteConfirm = () => {
+    confirm({
+      title: "Are you sure delete this task?",
+      icon: <ExclamationCircleFilled />,
+      // content: "Some descriptions",
+      okText: "Yes",
+      okType: "danger",
+      cancelText: "No",
+      onOk: async (id) => {
+        try {
+          await deleteDoc(doc(db, "users", user.uid, "transactions", id));
+        } catch (error) {
+          // console.error("Error deleting todo:", error);
+        }
+      },
+      onCancel() {
+        // console.log("Cancel");
+      },
+    });
+  };
+
   return (
     <Toolbar
       sx={[
@@ -331,7 +324,7 @@ function EnhancedTableToolbar(props) {
             </Modal>
           </>
           <Tooltip title="Delete">
-            <IconButton>
+            <IconButton onClick={showDeleteConfirm}>
               <DeleteIcon />
             </IconButton>
           </Tooltip>
@@ -707,9 +700,9 @@ export default function TransactionsPage() {
                           scope="row"
                           padding="none"
                         >
-                          {row.title}
+                          {row?.title ? row.title : row.type}
                         </TableCell>
-                        <TableCell align="center">{row.amount}</TableCell>
+                        <TableCell align="center">{row?.amount}</TableCell>
                         <TableCell align="center">
                           {new Date(row.date.seconds * 1000).toLocaleDateString(
                             "en-GB",
@@ -721,8 +714,12 @@ export default function TransactionsPage() {
                             }
                           )}
                         </TableCell>
-                        <TableCell align="center">{row.category}</TableCell>
-                        <TableCell align="center">{row.mode}</TableCell>
+                        <TableCell align="center">
+                          {row?.category ? row.category : row.type}
+                        </TableCell>
+                        <TableCell align="center">
+                          {row?.mode ? row.mode : row.toAccount}
+                        </TableCell>
                         <TableCell align="center">{row.comments}</TableCell>
                       </TableRow>
                     );

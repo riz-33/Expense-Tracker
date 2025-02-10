@@ -16,13 +16,7 @@ import {
 } from "@mui/material";
 import User from "../context/user";
 import { useContext, useEffect, useState } from "react";
-import {
-  collection,
-  db,
-  query,
-  orderBy,
-  onSnapshot,
-} from "../config/firebase";
+import { collection, db, query, orderBy, onSnapshot } from "../config/firebase";
 
 const columns = [
   { id: "date", label: "Date", minWidth: 170 },
@@ -145,17 +139,22 @@ export const DashboardPage = () => {
           return;
         }
 
-        const months = Array.from(
-          { length: 12 },
-          (_, i) => `${new Date().getFullYear()}-${i + 1}`
-        );
+        const months = Array.from({ length: 12 }, (_, i) => {
+          const monthName = new Date(2025, i, 1).toLocaleString("en-US", {
+            month: "short",
+          });
+          return `${monthName}-${new Date().getFullYear().toString().slice(-2)}`;
+        });
 
         const lineChartArray = [["Month", ...categories]];
-        months.forEach((month) => {
+        months.forEach((month, index) => {
+          const yearMonthKey = `${new Date().getFullYear()}-${index + 1}`;
           const row = [month];
+
           categories.forEach((category) => {
-            row.push(yearlyData[month]?.[category] || 0); // Default to 0 if no data
+            row.push(yearlyData[yearMonthKey]?.[category] || 0);
           });
+
           lineChartArray.push(row);
         });
         setLineChartData(lineChartArray);

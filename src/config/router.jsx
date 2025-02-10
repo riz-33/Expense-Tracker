@@ -12,6 +12,7 @@ import { useEffect, useState } from "react";
 import { auth, onAuthStateChanged, doc, getDoc, db } from "./firebase";
 import CircularProgress from "@mui/material/CircularProgress";
 import Box from "@mui/material/Box";
+import NewTransactionsPage from "../pages/newTransaction";
 
 function AppRouter() {
   const [User, setUser] = useState(false);
@@ -98,6 +99,18 @@ function AppRouter() {
                 User ? (
                   <SideDrawer>
                     <TransactionsPage />
+                  </SideDrawer>
+                ) : (
+                  <Navigate to={"/"} />
+                )
+              }
+            />
+                        <Route
+              path="/newtransactions"
+              element={
+                User ? (
+                  <SideDrawer>
+                    <NewTransactionsPage />
                   </SideDrawer>
                 ) : (
                   <Navigate to={"/"} />

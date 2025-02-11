@@ -32,6 +32,7 @@ import {
   Select,
   DatePicker,
   InputNumber,
+  Space,
 } from "antd";
 import { ExclamationCircleFilled } from "@ant-design/icons";
 
@@ -611,28 +612,26 @@ export default function NewTransactionsPage() {
     page * rowsPerPage + rowsPerPage
   );
   const emptyRows = rowsPerPage - visibleRows.length;
+  const { RangePicker } = DatePicker;
 
   return (
     <div>
       {/* Search Filters */}
       <Grid container spacing={1} justifyContent="end" padding={1}>
-        <Grid item xs={12} sm={6} md={3}>
-          {/* You can choose to use antd's DatePicker instead if preferred */}
-          <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <DemoContainer components={["DatePicker"]}>
-              <DatePicker label="Start Date" style={{ width: "100%" }} />
-            </DemoContainer>
-          </LocalizationProvider>
+        <Grid item xs={12} sm={4} md={3} alignSelf="center" marginTop={0.4}>
+          <Space direction="horizontal" size={12}>
+            <RangePicker
+              id={{
+                start: "startInput",
+                end: "endInput",
+              }}
+            />
+          </Space>
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <DemoContainer components={["DatePicker"]}>
-              <DatePicker label="End Date" style={{ width: "100%" }} />
-            </DemoContainer>
-          </LocalizationProvider>
-        </Grid>
-        <Grid item xs={12} sm={2} md={1} alignSelf="center" margin={2}>
-          <Button variant="contained">Search</Button>
+        <Grid item xs={12} sm={2} md={1} alignSelf="center" margin={1}>
+          <Button style={{ padding: "2px 12px" }} variant="contained" fullWidth>
+            Search
+          </Button>
         </Grid>
       </Grid>
 

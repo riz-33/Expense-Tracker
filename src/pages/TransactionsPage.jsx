@@ -1,4 +1,5 @@
 import { useState, useEffect, useContext } from "react";
+import moment from "moment";
 import PropTypes from "prop-types";
 import { alpha } from "@mui/material/styles";
 import { visuallyHidden } from "@mui/utils";
@@ -33,6 +34,7 @@ import {
   DatePicker,
   InputNumber,
   Space,
+  message,
 } from "antd";
 import { ExclamationCircleFilled } from "@ant-design/icons";
 import {
@@ -43,6 +45,7 @@ import {
   doc,
   deleteDoc,
   onSnapshot,
+  updateDoc,
 } from "../config/firebase";
 import { Timestamp } from "firebase/firestore";
 import User from "../context/user";
@@ -51,11 +54,11 @@ const { TextArea } = Input;
 const { TabPane } = Tabs;
 
 const headCells = [
-  { id: "name", label: "Name", minWidth: 150, align: "left" },
+  { id: "name", label: "Name", minWidth: 120, align: "left" },
   { id: "amount", label: "Amount", minWidth: 100, align: "left" },
   { id: "date", label: "Date", minWidth: 170 },
-  { id: "category", label: "Category", minWidth: 150, align: "left" },
-  { id: "account", label: "Account", minWidth: 150, align: "left" },
+  { id: "category", label: "Category", minWidth: 120, align: "left" },
+  { id: "account", label: "Account", minWidth: 120, align: "left" },
   { id: "comments", label: "Comments", minWidth: 150, align: "left" },
 ];
 
@@ -93,7 +96,6 @@ function EnhancedTableHead(props) {
             align={headCell.align || "left"}
             padding={headCell.disablePadding ? "none" : "normal"}
             sortDirection={orderBy === headCell.id ? order : false}
-            sx={{ minWidth: headCell.minWidth }}
           >
             <TableSortLabel
               active={orderBy === headCell.id}
@@ -126,10 +128,6 @@ EnhancedTableHead.propTypes = {
 function EnhancedTableToolbar(props) {
   const { numSelected, selected, setSelected, transactions } = props;
   const { user } = useContext(User);
-  const selectedTransaction =
-    selected.length === 1
-      ? transactions.find((t) => t.id === selected[0])
-      : null; 
   const [editForm] = Form.useForm();
   const [openEdit, setOpenEdit] = useState(false);
   const [activeTab, setActiveTab] = useState("expense");
@@ -137,11 +135,13 @@ function EnhancedTableToolbar(props) {
   const [expenseForm] = Form.useForm();
   const [transferForm] = Form.useForm();
   const [incomeForm] = Form.useForm();
-  const onUpdate = (values) => {
-    console.log("Edit Form Values:", values);
-    setOpenEdit(false);
-  };
-console.log(selectedTransaction)
+  const [selectedTransaction, setSelectedTransaction] = useState(null);
+
+  // const onUpdate = (values) => {
+  //   console.log("Edit Form Values:", values);
+  //   setOpenEdit(false);
+  // };
+  console.log(selectedTransaction);
   const onCreate = (data) => {
     console.log("Created Transaction:", data);
   };
@@ -223,6 +223,40 @@ console.log(selectedTransaction)
     });
   };
 
+  const handleEdit = (transaction) => {
+    setSelectedTransaction(transaction);
+    editForm.setFieldsValue({
+      title: transaction.title,
+      category: transaction.category,
+      date: transaction.date ? moment(transaction.date.seconds * 1000) : null,
+      amount: transaction.amount,
+      account: transaction.mode,
+      comments: transaction.comments,
+    });
+    setOpenEdit(true);
+  };
+
+  const onUpdate = async (values) => {
+    if (!selectedTransaction) return;
+
+    const updatedTransaction = {
+      ...values,
+      date: values.date ? new Date(values.date) : null,
+    };
+
+    try {
+      await updateDoc(
+        doc(db, "users", user.uid, "transactions", selectedTransaction.id),
+        updatedTransaction
+      );
+      message.success("Transaction updated successfully!");
+      setOpenEdit(false);
+    } catch (error) {
+      console.error("Error updating transaction:", error);
+      message.error("Failed to update transaction.");
+    }
+  };
+
   return (
     <Toolbar
       sx={[
@@ -255,8 +289,10 @@ console.log(selectedTransaction)
           <Tooltip title="Edit">
             <span>
               <IconButton
-                onClick={() => setOpenEdit(true)}
                 disabled={selected.length !== 1}
+                onClick={() =>
+                  handleEdit(transactions.find((t) => t.id === selected[0]))
+                }
               >
                 <ModeEditIcon />
               </IconButton>
@@ -270,20 +306,90 @@ console.log(selectedTransaction)
             cancelText="Cancel"
             destroyOnClose
             onCancel={() => setOpenEdit(false)}
-            modalRender={(dom) => (
-              <Form
-                layout="vertical"
-                form={editForm}
-                name="edit_form_modal"
-                onFinish={onUpdate}
-              >
-                {dom}
-              </Form>
-            )}
+            onOk={() => editForm.submit()}
           >
-            <EditForm selectedTransaction={selectedTransaction} />
+            <Form
+              layout="vertical"
+              form={editForm}
+              name="edit_form_modal"
+              onFinish={onUpdate}
+            >
+              <div style={{ display: "flex", gap: "16px" }}>
+                <Form.Item
+                  name="title"
+                  label="Title"
+                  style={{ flex: 1 }}
+                  rules={[{ required: true }]}
+                >
+                  <Input />
+                </Form.Item>
+                <Form.Item
+                  rules={[{ required: true }]}
+                  name="category"
+                  label="Category"
+                  style={{ flex: 1 }}
+                >
+                  <Select>
+                    <Select.Option value="housing">Housing</Select.Option>
+                    <Select.Option value="food">Food</Select.Option>
+                    <Select.Option value="transportation">
+                      Transportation
+                    </Select.Option>
+                    <Select.Option value="health">Health</Select.Option>
+                    <Select.Option value="kids">Kids</Select.Option>
+                    <Select.Option value="personal">
+                      Personal Care
+                    </Select.Option>
+                    <Select.Option value="clothing">Clothing</Select.Option>
+                    <Select.Option value="gifths">Gifts</Select.Option>
+                    <Select.Option value="savings">Savings</Select.Option>
+                    <Select.Option value="debts">Debts Payments</Select.Option>
+                  </Select>
+                </Form.Item>
+              </div>
+              <div style={{ display: "flex", gap: "16px" }}>
+                <Form.Item
+                  rules={[{ required: true }]}
+                  name="date"
+                  label="Select Date"
+                  style={{ width: "100%" }}
+                >
+                  <DatePicker style={{ width: "100%" }} />
+                </Form.Item>
+                <Form.Item
+                  rules={[{ required: true }]}
+                  name="amount"
+                  label="Amount"
+                  style={{ width: "100%" }}
+                >
+                  <InputNumber style={{ width: "100%" }} />
+                </Form.Item>
+                <Form.Item
+                  rules={[{ required: true }]}
+                  name="account"
+                  label="Account"
+                  style={{ width: "100%" }}
+                >
+                  <Select>
+                    <Select.Option value="cash">Cash</Select.Option>
+                    <Select.Option value="debit">Debit Card</Select.Option>
+                    <Select.Option value="credit">Credit Card</Select.Option>
+                  </Select>
+                </Form.Item>
+              </div>
+              <div>
+                <Form.Item
+                  name="comments"
+                  rules={[{ required: true }]}
+                  label="Comments"
+                >
+                  <TextArea rows={2} />
+                </Form.Item>
+              </div>
+            </Form>
           </Modal>
 
+          {/* <EditForm selectedTransaction={selectedTransaction} /> */}
           <Tooltip title="Delete">
             <IconButton onClick={showDeleteConfirm}>
               <DeleteIcon />
@@ -516,7 +622,7 @@ EnhancedTableToolbar.propTypes = {
   transactions: PropTypes.array.isRequired,
 };
 
-export default function NewTransactionsPage() {
+export default function TransactionsPage() {
   const { user } = useContext(User);
   const [transactions, setTransactions] = useState([]);
   const [selected, setSelected] = useState([]);
@@ -524,6 +630,8 @@ export default function NewTransactionsPage() {
   const [orderBy, setOrderBy] = useState("date");
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [dateRange, setDateRange] = useState([null, null]);
+  const [filteredData, setFilteredData] = useState([]);
 
   useEffect(() => {
     const unsubscribe = onSnapshot(
@@ -571,42 +679,66 @@ export default function NewTransactionsPage() {
   };
 
   const sortedRows = transactions.sort((a, b) => {
-    if (order === "asc") {
+    if (order === "desc") {
       return a[orderBy] > b[orderBy] ? 1 : -1;
     } else {
       return a[orderBy] < b[orderBy] ? 1 : -1;
     }
   });
 
-  const visibleRows = sortedRows.slice(
-    page * rowsPerPage,
-    page * rowsPerPage + rowsPerPage
-  );
-  const emptyRows = rowsPerPage - visibleRows.length;
   const { RangePicker } = DatePicker;
+
+  const handleSearch = () => {
+    if (!dateRange[0] || !dateRange[1]) {
+      setFilteredData(transactions);
+      return;
+    }
+
+    const [startDate, endDate] = dateRange;
+
+    const filteredTransactions = transactions.filter((t) => {
+      if (!t.date || !t.date.seconds) return false; // Ensure date exists
+      const transactionDate = new Date(t.date.seconds * 1000);
+
+      return transactionDate >= startDate && transactionDate <= endDate;
+    });
+
+    setFilteredData(filteredTransactions);
+  };
+
+  useEffect(() => {
+    setFilteredData(transactions);
+  }, [transactions]);
 
   return (
     <div>
-      {/* Search Filters */}
       <Grid container spacing={1} justifyContent="end" padding={1}>
         <Grid item xs={12} sm={4} md={3} alignSelf="center" marginTop={0.4}>
           <Space direction="horizontal" size={12}>
             <RangePicker
-              id={{
-                start: "startInput",
-                end: "endInput",
-              }}
+              id={{ start: "startInput", end: "endInput" }}
+              onChange={(dates) =>
+                setDateRange(
+                  dates
+                    ? [dates[0]?.toDate(), dates[1]?.toDate()]
+                    : [null, null]
+                )
+              }
             />
           </Space>
         </Grid>
         <Grid item xs={12} sm={2} md={1} alignSelf="center" margin={1}>
-          <Button style={{ padding: "2px 12px" }} variant="contained" fullWidth>
+          <Button
+            onClick={handleSearch}
+            style={{ padding: "2px 12px" }}
+            variant="contained"
+            fullWidth
+          >
             Search
           </Button>
         </Grid>
       </Grid>
 
-      {/* Transactions Table */}
       <Grid container padding={2}>
         <Grid item xs={12}>
           <Card sx={{ minWidth: 275 }}>
@@ -624,66 +756,72 @@ export default function NewTransactionsPage() {
                   orderBy={orderBy}
                   onSelectAllClick={handleSelectAllClick}
                   onRequestSort={handleRequestSort}
-                  rowCount={transactions.length}
+                  rowCount={
+                    filteredData.length > 0
+                      ? filteredData.length
+                      : transactions.length
+                  }
                 />
                 <TableBody>
-                  {visibleRows.map((row, index) => {
-                    const isItemSelected = selected.includes(row.id);
-                    const labelId = `enhanced-table-checkbox-${index}`;
+                  {filteredData.length > 0 ? (
+                    filteredData.map((row, index) => {
+                      const isItemSelected = selected.includes(row.id);
+                      const labelId = `enhanced-table-checkbox-${index}`;
 
-                    return (
-                      <TableRow
-                        hover
-                        onClick={(event) => handleClick(event, row.id)}
-                        role="checkbox"
-                        aria-checked={isItemSelected}
-                        tabIndex={-1}
-                        key={row.id}
-                        selected={isItemSelected}
-                        sx={{ cursor: "pointer" }}
-                      >
-                        <TableCell padding="checkbox">
-                          <Checkbox
-                            color="primary"
-                            checked={isItemSelected}
-                            inputProps={{
-                              "aria-labelledby": labelId,
-                            }}
-                          />
-                        </TableCell>
-                        <TableCell
-                          component="th"
-                          id={labelId}
-                          scope="row"
-                          padding="none"
+                      return (
+                        <TableRow
+                          hover
+                          onClick={(event) => handleClick(event, row.id)}
+                          role="checkbox"
+                          aria-checked={isItemSelected}
+                          tabIndex={-1}
+                          key={row.id}
+                          selected={isItemSelected}
+                          sx={{ cursor: "pointer" }}
                         >
-                          {row?.title ? row.title : row.type}
-                        </TableCell>
-                        <TableCell align="center">{row?.amount}</TableCell>
-                        <TableCell align="center">
-                          {new Date(row.date.seconds * 1000).toLocaleDateString(
-                            "en-GB",
-                            {
+                          <TableCell padding="checkbox">
+                            <Checkbox
+                              color="primary"
+                              checked={isItemSelected}
+                              inputProps={{
+                                "aria-labelledby": labelId,
+                              }}
+                            />
+                          </TableCell>
+                          <TableCell
+                            component="th"
+                            id={labelId}
+                            scope="row"
+                            padding="none"
+                          >
+                            {row?.title ? row.title : row.type}
+                          </TableCell>
+                          <TableCell align="left">{row?.amount}</TableCell>
+                          <TableCell align="left">
+                            {new Date(
+                              row?.date?.seconds * 1000
+                            ).toLocaleDateString("en-GB", {
                               weekday: "short",
                               day: "2-digit",
                               month: "short",
                               year: "numeric",
-                            }
-                          )}
-                        </TableCell>
-                        <TableCell align="center">
-                          {row?.category ? row.category : row.type}
-                        </TableCell>
-                        <TableCell align="center">
-                          {row?.mode ? row.mode : row.toAccount}
-                        </TableCell>
-                        <TableCell align="center">{row.comments}</TableCell>
-                      </TableRow>
-                    );
-                  })}
-                  {emptyRows > 0 && (
+                            })}
+                          </TableCell>
+                          <TableCell align="left">
+                            {row?.category ? row.category : row.type}
+                          </TableCell>
+                          <TableCell align="left">
+                            {row?.mode ? row.mode : row.toAccount}
+                          </TableCell>
+                          <TableCell align="left">{row.comments}</TableCell>
+                        </TableRow>
+                      );
+                    })
+                  ) : (
                     <TableRow>
-                      <TableCell colSpan={7} />
+                      <TableCell colSpan={7} align="center">
+                        No transactions found for the selected date range.
+                      </TableCell>
                     </TableRow>
                   )}
                 </TableBody>
@@ -692,7 +830,11 @@ export default function NewTransactionsPage() {
             <TablePagination
               rowsPerPageOptions={[10, 15, 25, 50]}
               component="div"
-              count={transactions.length}
+              count={
+                filteredData.length > 0
+                  ? filteredData.length
+                  : transactions.length
+              }
               rowsPerPage={rowsPerPage}
               page={page}
               onPageChange={handleChangePage}

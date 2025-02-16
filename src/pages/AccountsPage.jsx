@@ -14,9 +14,20 @@ import CreditCardIcon from "@mui/icons-material/CreditCard";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
-import React from "react";
+import React, { useContext } from "react";
 import { useState } from "react";
-import { Form, Input, InputNumber, Modal, Radio, Select } from "antd";
+import {
+  DatePicker,
+  Form,
+  Input,
+  InputNumber,
+  Modal,
+  Radio,
+  Select,
+} from "antd";
+import User from "../context/user";
+import { collection, db, addDoc, serverTimestamp } from "../config/firebase";
+import { Timestamp } from "firebase/firestore";
 
 const options = ["Transfer Funds", "Add Money"];
 
@@ -30,10 +41,19 @@ export const AccountsPage = () => {
     setAnchorEl(null);
   };
 
+  const { user } = useContext(User);
   const [form] = Form.useForm();
   const [formValues, setFormValues] = useState();
   const [openModal, setOpenModal] = useState(false);
-  const onCreate = (values) => {
+  const onCreate = async (values) => {
+    const selectedDate = new Date(values.date);
+    await addDoc(collection(db, "users", user.uid, "transactions"), {
+      title: values.title,
+      mode: values.mode,
+      amount: values.amount,
+      type: "Income",
+      date: Timestamp.fromDate(selectedDate),
+    });
     console.log("Received values of form: ", values);
     setFormValues(values);
     setOpenModal(false);
@@ -78,40 +98,43 @@ export const AccountsPage = () => {
           </Form>
         )}
       >
-        <Form.Item
-          name="title"
-          label="Title"
-          rules={[
-            {
-              required: true,
-              message: "Please input the title of account!",
-            },
-          ]}
-        >
+        <Form.Item name="title" label="Title" rules={[{ required: true }]}>
           <Input />
         </Form.Item>
         <div style={{ display: "flex", gap: "16px" }}>
-          <Form.Item name="group" label="Group" style={{width:'100%'}}>
-            <Select  style={{width:'100%'}}>
-              <Select.Option value="cash">Cash</Select.Option>
-              <Select.Option value="debit">Debit Card</Select.Option>
-              <Select.Option value="credit">Credit Card</Select.Option>
-              <Select.Option value="investment">Investment</Select.Option>
+          <Form.Item
+            name="date"
+            label="Date"
+            rules={[{ required: true }]}
+            style={{ width: "100%" }}
+          >
+            <DatePicker style={{ width: "100%" }} />
+          </Form.Item>
+          <Form.Item
+            name="mode"
+            label="Mode"
+            rules={[{ required: true }]}
+            style={{ width: "100%" }}
+          >
+            <Select>
+              <Select.Option value="Cash">Cash</Select.Option>
+              <Select.Option value="Debit Card">Debit Card</Select.Option>
+              <Select.Option value="Credit Card">Credit Card</Select.Option>
+              <Select.Option value="Investment">Investment</Select.Option>
             </Select>
           </Form.Item>
-          <Form.Item name="amount" label="Amount" style={{ width: "100%" }}>
+          <Form.Item
+            name="amount"
+            label="Amount"
+            rules={[{ required: true }]}
+            style={{ width: "100%" }}
+          >
             <InputNumber style={{ width: "100%" }} />
           </Form.Item>
         </div>
       </Modal>
 
-      <Grid
-        marginTop={1}
-        padding={2}
-        container
-        rowSpacing={3}
-        columnSpacing={2}
-      >
+      <Grid padding={2} container rowSpacing={3} columnSpacing={2}>
         <Grid item xs={12} sm={6} md={3}>
           <Card sx={{ maxWidth: 290 }}>
             <CardHeader

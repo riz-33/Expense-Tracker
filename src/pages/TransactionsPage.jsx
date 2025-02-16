@@ -215,9 +215,11 @@ function EnhancedTableToolbar(props) {
               deleteDoc(doc(db, "users", user.uid, "transactions", id))
             )
           );
+          message.info("Transaction(s) deleted successfully!");
           setSelected([]);
         } catch (error) {
           console.error("Error deleting transaction(s):", error);
+          message.error("Failed to delete transaction(s).");
         }
       },
     });
@@ -354,7 +356,7 @@ function EnhancedTableToolbar(props) {
                   label="Select Date"
                   style={{ width: "100%" }}
                 >
-                  <DatePicker style={{ width: "100%" }} />
+                  <DatePicker  style={{ width: "100%" }} />
                 </Form.Item>
                 <Form.Item
                   rules={[{ required: true }]}

@@ -14,7 +14,7 @@ import CreditCardIcon from "@mui/icons-material/CreditCard";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
-import React, { useContext } from "react";
+import React, { useContext, useEffect } from "react";
 import { useState } from "react";
 import {
   DatePicker,
@@ -26,14 +26,40 @@ import {
   Select,
 } from "antd";
 import User from "../context/user";
-import { collection, db, addDoc, serverTimestamp } from "../config/firebase";
+import {
+  collection,
+  db,
+  addDoc,
+  serverTimestamp,
+  onSnapshot,
+} from "../config/firebase";
 import { Timestamp } from "firebase/firestore";
 
 const options = ["Transfer Funds", "Add Money"];
 
+const getAccountStyle = (mode) => {
+  switch (mode) {
+    case "Debit Card":
+      return { icon: <CreditCardIcon />, color: green[500] };
+    case "Credit Card":
+      return { icon: <CreditCardIcon />, color: red[600] };
+    case "Investment":
+      return { icon: <AttachMoneyIcon />, color: purple[500] };
+    case "Cash":
+      return { icon: <PaymentsIcon />, color: blue[800] };
+    default:
+      return { icon: <PaymentsIcon />, color: blue[800] }; // Default case
+  }
+};
+
 export const AccountsPage = () => {
+  const [accounts, setAccounts] = useState([]);
   const [anchorEl, setAnchorEl] = React.useState(null);
   const open = Boolean(anchorEl);
+  const { user } = useContext(User);
+  const [form] = Form.useForm();
+  const [openModal, setOpenModal] = useState(false);
+
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
   };
@@ -41,10 +67,6 @@ export const AccountsPage = () => {
     setAnchorEl(null);
   };
 
-  const { user } = useContext(User);
-  const [form] = Form.useForm();
-  const [formValues, setFormValues] = useState();
-  const [openModal, setOpenModal] = useState(false);
   const onCreate = async (values) => {
     const selectedDate = new Date(values.date);
     await addDoc(collection(db, "users", user.uid, "transactions"), {
@@ -53,11 +75,26 @@ export const AccountsPage = () => {
       amount: values.amount,
       type: "Income",
       date: Timestamp.fromDate(selectedDate),
+      page: "newAccount",
     });
     console.log("Received values of form: ", values);
-    setFormValues(values);
     setOpenModal(false);
   };
+
+  useEffect(() => {
+    if (!user) return;
+    const accountsRef = collection(db, "users", user.uid, "transactions");
+    const unsubscribe = onSnapshot(accountsRef, (snapshot) => {
+      const fetchedAccounts = snapshot.docs
+        .map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }))
+        .filter((account) => account.page === "newAccount");
+      setAccounts(fetchedAccounts);
+    });
+    return () => unsubscribe();
+  }, [user]);
 
   return (
     <div>
@@ -135,247 +172,71 @@ export const AccountsPage = () => {
       </Modal>
 
       <Grid padding={2} container rowSpacing={3} columnSpacing={2}>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ maxWidth: 290 }}>
-            <CardHeader
-              avatar={
-                <Avatar sx={{ bgcolor: blue[800], marginBottom: 8 }}>
-                  <PaymentsIcon />
-                </Avatar>
-              }
-              // action={
-              //   <>
-              //     <IconButton
-              //       aria-label="more"
-              //       id="long-button"
-              //       aria-controls={open ? "long-menu" : undefined}
-              //       aria-expanded={open ? "true" : undefined}
-              //       aria-haspopup="true"
-              //       onClick={handleClick}
-              //     >
-              //       <MoreVertIcon />
-              //     </IconButton>
-              //     <Menu
-              //       id="long-menu"
-              //       MenuListProps={{
-              //         "aria-labelledby": "long-button",
-              //       }}
-              //       anchorEl={anchorEl}
-              //       open={open}
-              //       onClose={handleClose}
-              //       slotProps={{
-              //         paper: {
-              //           style: {
-              //             width: "20ch",
-              //           },
-              //         },
-              //       }}
-              //     >
-              //       {options.map((option) => (
-              //         <MenuItem key={option} onClick={handleClose}>
-              //           {option}
-              //         </MenuItem>
-              //       ))}
-              //     </Menu>
-              //   </>
-              // }
-              title={
-                <>
-                  <Typography sx={{ fontSize: 20 }}>Cash</Typography>
-                  <Typography sx={{ color: "text.secondary", mb: 1.5 }}>
-                    Cash
-                  </Typography>
-                  <Typography variant="h5" component="div">
-                    Rs.20,000
-                  </Typography>
-                </>
-              }
-            />
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ maxWidth: 290 }}>
-            <CardHeader
-              avatar={
-                <Avatar
-                  sx={{ bgcolor: green[500], marginBottom: 8 }}
-                  aria-label="recipe"
-                >
-                  <CreditCardIcon />
-                </Avatar>
-              }
-              // action={
-              //   <>
-              //     <IconButton
-              //       aria-label="more"
-              //       id="long-button"
-              //       aria-controls={open ? "long-menu" : undefined}
-              //       aria-expanded={open ? "true" : undefined}
-              //       aria-haspopup="true"
-              //       onClick={handleClick}
-              //     >
-              //       <MoreVertIcon />
-              //     </IconButton>
-              //     <Menu
-              //       id="long-menu"
-              //       MenuListProps={{
-              //         "aria-labelledby": "long-button",
-              //       }}
-              //       anchorEl={anchorEl}
-              //       open={open}
-              //       onClose={handleClose}
-              //       slotProps={{
-              //         paper: {
-              //           style: {
-              //             width: "20ch",
-              //           },
-              //         },
-              //       }}
-              //     >
-              //       {options.map((option) => (
-              //         <MenuItem key={option} onClick={handleClose}>
-              //           {option}
-              //         </MenuItem>
-              //       ))}
-              //     </Menu>
-              //   </>
-              // }
-              title={
-                <>
-                  <Typography sx={{ fontSize: 20 }}>Debit Card</Typography>
-                  <Typography sx={{ color: "text.secondary", mb: 1.5 }}>
-                    Meezan Bank
-                  </Typography>
-                  <Typography variant="h5" component="div">
-                    Rs.50,000
-                  </Typography>
-                </>
-              }
-            />
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ maxWidth: 290 }}>
-            <CardHeader
-              avatar={
-                <Avatar
-                  sx={{ bgcolor: red[600], marginBottom: 8 }}
-                  aria-label="recipe"
-                >
-                  <CreditCardIcon />
-                </Avatar>
-              }
-              // action={
-              //   <>
-              //     <IconButton
-              //       aria-label="more"
-              //       id="long-button"
-              //       aria-controls={open ? "long-menu" : undefined}
-              //       aria-expanded={open ? "true" : undefined}
-              //       aria-haspopup="true"
-              //       onClick={handleClick}
-              //     >
-              //       <MoreVertIcon />
-              //     </IconButton>
-              //     <Menu
-              //       id="long-menu"
-              //       MenuListProps={{
-              //         "aria-labelledby": "long-button",
-              //       }}
-              //       anchorEl={anchorEl}
-              //       open={open}
-              //       onClose={handleClose}
-              //       slotProps={{
-              //         paper: {
-              //           style: {
-              //             width: "20ch",
-              //           },
-              //         },
-              //       }}
-              //     >
-              //       {options.map((option) => (
-              //         <MenuItem key={option} onClick={handleClose}>
-              //           {option}
-              //         </MenuItem>
-              //       ))}
-              //     </Menu>
-              //   </>
-              // }
-              title={
-                <>
-                  <Typography sx={{ fontSize: 20 }}>Credit Card</Typography>
-                  <Typography sx={{ color: "text.secondary", mb: 1.5 }}>
-                    Faysal Bank
-                  </Typography>
-                  <Typography variant="h5" component="div">
-                    Rs.100,000
-                  </Typography>
-                </>
-              }
-            />
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ maxWidth: 290 }}>
-            <CardHeader
-              avatar={
-                <Avatar
-                  sx={{ bgcolor: purple[500], marginBottom: 8 }}
-                  aria-label="recipe"
-                >
-                  <AttachMoneyIcon />
-                </Avatar>
-              }
-              // action={
-              //   <>
-              //     <IconButton
-              //       aria-label="more"
-              //       id="long-button"
-              //       aria-controls={open ? "long-menu" : undefined}
-              //       aria-expanded={open ? "true" : undefined}
-              //       aria-haspopup="true"
-              //       onClick={handleClick}
-              //     >
-              //       <MoreVertIcon />
-              //     </IconButton>
-              //     <Menu
-              //       id="long-menu"
-              //       MenuListProps={{
-              //         "aria-labelledby": "long-button",
-              //       }}
-              //       anchorEl={anchorEl}
-              //       open={open}
-              //       onClose={handleClose}
-              //       slotProps={{
-              //         paper: {
-              //           style: {
-              //             width: "20ch",
-              //           },
-              //         },
-              //       }}
-              //     >
-              //       {options.map((option) => (
-              //         <MenuItem key={option} onClick={handleClose}>
-              //           {option}
-              //         </MenuItem>
-              //       ))}
-              //     </Menu>
-              //   </>
-              // }
-              title={
-                <>
-                  <Typography sx={{ fontSize: 20 }}>Investment</Typography>
-                  <Typography sx={{ color: "text.secondary", mb: 1.5 }}>
-                    Al Meezan
-                  </Typography>
-                  <Typography variant="h5" component="div">
-                    Rs.50,000
-                  </Typography>
-                </>
-              }
-            />
-          </Card>
-        </Grid>
+        {accounts.map((account, index) => {
+          const { icon, color } = getAccountStyle(account.mode);
+          return (
+            <Grid item xs={12} sm={6} md={4} key={index}>
+              <Card sx={{ maxWidth: 400 }}>
+                <CardHeader
+                  avatar={
+                    <Avatar sx={{ bgcolor: color, marginBottom: 8 }}>
+                      {icon}
+                    </Avatar>
+                  }
+                  action={
+                    <>
+                      <IconButton
+                        aria-label="more"
+                        id="long-button"
+                        aria-controls={open ? "long-menu" : undefined}
+                        aria-expanded={open ? "true" : undefined}
+                        aria-haspopup="true"
+                        onClick={handleClick}
+                      >
+                        <MoreVertIcon />
+                      </IconButton>
+                      <Menu
+                        id="long-menu"
+                        MenuListProps={{
+                          "aria-labelledby": "long-button",
+                        }}
+                        anchorEl={anchorEl}
+                        open={open}
+                        onClose={handleClose}
+                        slotProps={{
+                          paper: {
+                            style: {
+                              width: "20ch",
+                            },
+                          },
+                        }}
+                      >
+                        {options.map((option) => (
+                          <MenuItem key={option} onClick={handleClose}>
+                            {option}
+                          </MenuItem>
+                        ))}
+                      </Menu>
+                    </>
+                  }
+                  title={
+                    <>
+                      <Typography sx={{ fontSize: 20 }}>
+                        {account.title}
+                      </Typography>
+                      <Typography sx={{ color: "text.secondary", mb: 1.5 }}>
+                        {account.mode}
+                      </Typography>
+                      <Typography variant="h6" component="div">
+                        Rs. {account.amount}
+                      </Typography>
+                    </>
+                  }
+                />
+              </Card>
+            </Grid>
+          );
+        })}
       </Grid>
     </div>
   );

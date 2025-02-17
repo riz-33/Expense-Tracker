@@ -214,7 +214,10 @@ export const DashboardPage = () => {
                   Total Balance
                 </Typography>
                 <Typography variant="h5" component="div">
-                  {user?.currency} {totalIncome - totalExpense}
+                  {user?.currency}{" "}
+                  {new Intl.NumberFormat("en-IN").format(
+                    totalIncome - totalExpense
+                  )}
                 </Typography>
               </CardContent>
             </Card>
@@ -236,7 +239,10 @@ export const DashboardPage = () => {
                   Total Income
                 </Typography>
                 <Typography variant="h5" component="div">
-                  {user?.currency} {totalIncome ? totalIncome : 0}
+                  {user?.currency}{" "}
+                  {new Intl.NumberFormat("en-IN").format(
+                    totalIncome ? totalIncome : 0
+                  )}
                 </Typography>
               </CardContent>
             </Card>
@@ -258,7 +264,10 @@ export const DashboardPage = () => {
                   Total Expense
                 </Typography>
                 <Typography variant="h5" component="div">
-                  {user?.currency} {totalExpense ? totalExpense : 0}
+                  {user?.currency}{" "}
+                  {new Intl.NumberFormat("en-IN").format(
+                    totalExpense ? totalExpense : 0
+                  )}
                 </Typography>
               </CardContent>
             </Card>
@@ -393,14 +402,14 @@ export const DashboardPage = () => {
                                 })}
                               </TableCell>
                               <TableCell>
-                                {item?.title ? item.title : item.type}
+                                {item?.title ? item.title.toUpperCase() : item.type.toUpperCase()}
                               </TableCell>
-                              <TableCell>{item?.amount}</TableCell>
+                              <TableCell>{new Intl.NumberFormat("en-IN").format(item.amount)}</TableCell>
                               <TableCell>
-                                {item?.category ? item.category : item.type}
+                                {item?.category ? item.category.toUpperCase() : item.type.toUpperCase()}
                               </TableCell>
                               <TableCell>
-                                {item?.mode ? item.mode : item.toAccount}
+                                {item?.mode ? item.mode.toUpperCase() : item.toAccount.toUpperCase()}
                               </TableCell>
                               <TableCell>{item?.comments}</TableCell>
                             </TableRow>

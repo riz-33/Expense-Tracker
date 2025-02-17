@@ -24,6 +24,7 @@ import {
   Modal,
   Radio,
   Select,
+  message,
 } from "antd";
 import User from "../context/user";
 import {
@@ -69,16 +70,21 @@ export const AccountsPage = () => {
 
   const onCreate = async (values) => {
     const selectedDate = new Date(values.date);
-    await addDoc(collection(db, "users", user.uid, "transactions"), {
-      title: values.title,
-      mode: values.mode,
-      amount: values.amount,
-      type: "Income",
-      date: Timestamp.fromDate(selectedDate),
-      page: "newAccount",
-    });
-    console.log("Received values of form: ", values);
-    setOpenModal(false);
+    try {
+      await addDoc(collection(db, "users", user.uid, "transactions"), {
+        title: values.title,
+        mode: values.mode,
+        amount: values.amount,
+        type: "Income",
+        date: Timestamp.fromDate(selectedDate),
+        page: "newAccount",
+      });
+      message.success("Transaction created successfully!");
+      console.log("Received values of form: ", values);
+      setOpenModal(false);
+    } catch {
+      message.error("Failed to create transaction.");
+    }
   };
 
   useEffect(() => {
@@ -222,13 +228,13 @@ export const AccountsPage = () => {
                   title={
                     <>
                       <Typography sx={{ fontSize: 20 }}>
-                        {account.title}
+                        {account.title.toUpperCase()}
                       </Typography>
                       <Typography sx={{ color: "text.secondary", mb: 1.5 }}>
-                        {account.mode}
+                        {account.mode.toUpperCase()}
                       </Typography>
                       <Typography variant="h6" component="div">
-                        Rs. {account.amount}
+                        Rs. {new Intl.NumberFormat("en-IN").format(account.amount)}
                       </Typography>
                     </>
                   }

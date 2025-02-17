@@ -5,8 +5,8 @@ import {
   Form,
   Input,
   InputNumber,
+  message,
   Row,
-  Select,
   Typography,
 } from "antd";
 import {
@@ -14,7 +14,6 @@ import {
   UserOutlined,
   MailOutlined,
   PhoneOutlined,
-  WalletOutlined,
 } from "@ant-design/icons";
 import {
   auth,
@@ -24,56 +23,39 @@ import {
   setDoc,
   serverTimestamp,
 } from "../config/firebase";
+import { useState } from "react";
 
-const onFinish = async (values) => {
-  console.log("Success:", values);
-  await onSubmit(values);
-};
-const onFinishFailed = (errorInfo) => {
-  console.log("Failed:", errorInfo);
-};
-const { Option } = Select;
 const { Title } = Typography;
 
-const onSubmit = async (data) => {
-  try {
-    const response = await createUserWithEmailAndPassword(
-      auth,
-      data.email,
-      data.password
-    );
-    // showToastMessage("User Registered Successfully!", "success");
-    await setDoc(doc(db, "users", response.user.uid), {
-      username: data.username,
-      email: data.email,
-      password: data.password,
-      number: data.phone,
-      currency: 'PKR',
-      uid: response.user.uid,
-      createdAt: serverTimestamp(),
-    });
-    console.log("User registered and saved to Firestore:", response.user);
-  } catch (error) {
-    console.error("Error during email/password signup:", error);
-  }
-};
-
 const RegisterForm = () => {
-  const suffixSelector = (
-    <Form.Item name="suffix" noStyle>
-      <Select
-        style={{
-          width: 70,
-        }}
-      >
-        <Option value="PKR">PKR</Option>
-        <Option value="USD">USD</Option>
-        <Option value="EUR">EUR</Option>
-        <Option value="GBP">GBP</Option>
-        <Option value="SAR">SAR</Option>
-      </Select>
-    </Form.Item>
-  );
+  const [loading, setLoading] = useState(false);
+
+  const onFinish = async (data) => {
+    setLoading(true); // Start loading
+    try {
+      const response = await createUserWithEmailAndPassword(
+        auth,
+        data.email,
+        data.password
+      );
+      message.success("User Registered Successfully!");
+
+      await setDoc(doc(db, "users", response.user.uid), {
+        username: data.username,
+        email: data.email,
+        password: data.password,
+        number: data.phone,
+        currency: "PKR",
+        uid: response.user.uid,
+        createdAt: serverTimestamp(),
+      });
+    } catch (error) {
+      message.error(`Failed to register. ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <Row>
       <Col xs={2} sm={4} md={6} lg={8} xl={8}></Col>
@@ -84,12 +66,8 @@ const RegisterForm = () => {
           </Title>
           <Form
             name="basic"
-            initialValues={{
-              remember: true,
-              suffixSelector: "PKR",
-            }}
+            initialValues={{ remember: true }}
             onFinish={onFinish}
-            onFinishFailed={onFinishFailed}
             autoComplete="off"
           >
             <Form.Item
@@ -180,28 +158,14 @@ const RegisterForm = () => {
                 }}
               />
             </Form.Item>
-
-            {/* <Form.Item
-              name="income"
-              rules={[
-                {
-                  required: true,
-                  message: "Please input initial income!",
-                },
-              ]}
-            >
-              <InputNumber
-                prefix={<WalletOutlined />}
-                placeholder="Income"
-                addonAfter={suffixSelector}
-                style={{
-                  width: "100%",
-                }}
-              />
-            </Form.Item> */}
-
             <Form.Item label={null}>
-              <Button block type="primary" htmlType="submit">
+              <Button
+                block
+                type="primary"
+                htmlType="submit"
+                loading={loading}
+                disabled={loading}
+              >
                 Sign Up
               </Button>
               or <a href="/">Login now!</a>

@@ -46,6 +46,9 @@ import {
   deleteDoc,
   onSnapshot,
   updateDoc,
+  query,
+  where,
+  getDocs,
 } from "../config/firebase";
 import { Timestamp } from "firebase/firestore";
 import User from "../context/user";
@@ -58,7 +61,7 @@ const headCells = [
   { id: "amount", label: "Amount", minWidth: 100, align: "left" },
   { id: "date", label: "Date", minWidth: 170 },
   { id: "category", label: "Category", minWidth: 120, align: "left" },
-  { id: "account", label: "Account", minWidth: 120, align: "left" },
+  { id: "mode", label: "Mode", minWidth: 120, align: "left" },
   { id: "comments", label: "Comments", minWidth: 150, align: "left" },
 ];
 
@@ -137,10 +140,6 @@ function EnhancedTableToolbar(props) {
   const [incomeForm] = Form.useForm();
   const [selectedTransaction, setSelectedTransaction] = useState(null);
 
-  // const onUpdate = (values) => {
-  //   console.log("Edit Form Values:", values);
-  //   setOpenEdit(false);
-  // };
   console.log(selectedTransaction);
   const onCreate = (data) => {
     console.log("Created Transaction:", data);
@@ -163,11 +162,12 @@ function EnhancedTableToolbar(props) {
           category: values.category,
           date: Timestamp.fromDate(selectedDate),
           amount: values.amount,
-          mode: values.account,
+          mode: values.mode,
           comments: values.comments || "",
           type: "Expense",
           createdAt: serverTimestamp(),
         });
+        message.success("Transaction created successfully!");
       } else if (activeTab === "transfer") {
         values = await transferForm.validateFields();
         const selectedDate = new Date(values.date);
@@ -180,6 +180,7 @@ function EnhancedTableToolbar(props) {
           type: "Transfer",
           createdAt: serverTimestamp(),
         });
+        message.success("Transaction created successfully!");
       } else if (activeTab === "income") {
         values = await incomeForm.validateFields();
         const selectedDate = new Date(values.date);
@@ -192,11 +193,13 @@ function EnhancedTableToolbar(props) {
           type: "Income",
           createdAt: serverTimestamp(),
         });
+        message.success("Transaction created successfully!");
       }
       onCreate({ type: activeTab, values });
       setOpen(false);
       resetForms();
     } catch (error) {
+      message.error("Failed to create transaction.");
       console.error("Validation or submission error:", error);
     }
   };
@@ -232,7 +235,7 @@ function EnhancedTableToolbar(props) {
       category: transaction.category,
       date: transaction.date ? moment(transaction.date.seconds * 1000) : null,
       amount: transaction.amount,
-      account: transaction.mode,
+      mode: transaction.mode,
       comments: transaction.comments,
     });
     setOpenEdit(true);
@@ -258,6 +261,44 @@ function EnhancedTableToolbar(props) {
       message.error("Failed to update transaction.");
     }
   };
+  const [modesTransactions, setModesTransactions] = useState([]);
+  const [filteredData, setFilteredData] = useState([]);
+  const [transactionModes, setTransactionModes] = useState([]);
+
+  useEffect(() => {
+    if (!user) return;
+    const q = query(
+      collection(db, "users", user.uid, "transactions"),
+      where("userId", "==", user.uid),
+      where("type", "in", ["Income", "newAccount"]) // Fetch only "Income" OR "newAccount"
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      setModesTransactions(data);
+      setFilteredData(data); // Initially show all transactions
+    });
+
+    return () => unsubscribe();
+  }, [user]);
+
+  // 🔹 Fetch Available Transaction Modes from Firestore
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchModes = async () => {
+      const modesCollection = collection(db, "users",user.uid, "transactions"); // Assume "modes" collection stores transaction modes
+      const snapshot = await getDocs(modesCollection);
+      const modesList = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      setTransactionModes(modesList); // Store fetched modes
+    };
+
+    fetchModes();
+  }, [user]);
 
   return (
     <Toolbar
@@ -356,7 +397,7 @@ function EnhancedTableToolbar(props) {
                   label="Select Date"
                   style={{ width: "100%" }}
                 >
-                  <DatePicker  style={{ width: "100%" }} />
+                  <DatePicker style={{ width: "100%" }} />
                 </Form.Item>
                 <Form.Item
                   rules={[{ required: true }]}
@@ -368,21 +409,23 @@ function EnhancedTableToolbar(props) {
                 </Form.Item>
                 <Form.Item
                   rules={[{ required: true }]}
-                  name="account"
-                  label="Account"
+                  name="mode"
+                  label="Mode"
                   style={{ width: "100%" }}
                 >
-                  <Select>
-                    <Select.Option value="cash">Cash</Select.Option>
-                    <Select.Option value="debit">Debit Card</Select.Option>
-                    <Select.Option value="credit">Credit Card</Select.Option>
+                             <Select>
+                    {transactionModes.map((mode) => (
+                      <Select.Option key={mode.id} value={mode.mode}>
+                        {mode.name}
+                      </Select.Option>
+                    ))}
                   </Select>
                 </Form.Item>
               </div>
               <div>
                 <Form.Item
                   name="comments"
-                  rules={[{ required: true }]}
+                  // rules={[{ required: true }]}
                   label="Comments"
                 >
                   <TextArea rows={2} />
@@ -471,17 +514,17 @@ function EnhancedTableToolbar(props) {
                   <InputNumber style={{ width: "100%" }} />
                 </Form.Item>
                 <Form.Item
-                  name="account"
-                  label="Account"
+                  name="mode"
+                  label="Mode"
                   rules={[{ required: true }]}
                   style={{ width: "100%" }}
                 >
                   <Select>
-                    <Select.Option value="Cash">Cash</Select.Option>
-                    <Select.Option value="Debit Card">Debit Card</Select.Option>
-                    <Select.Option value="Credit Card">
-                      Credit Card
-                    </Select.Option>
+                    {transactionModes.map((mode) => (
+                      <Select.Option key={mode.id} value={mode.name}>
+                        {mode.name}
+                      </Select.Option>
+                    ))}
                   </Select>
                 </Form.Item>
               </div>
@@ -695,16 +738,13 @@ export default function TransactionsPage() {
       setFilteredData(transactions);
       return;
     }
-
     const [startDate, endDate] = dateRange;
-
     const filteredTransactions = transactions.filter((t) => {
       if (!t.date || !t.date.seconds) return false; // Ensure date exists
       const transactionDate = new Date(t.date.seconds * 1000);
 
       return transactionDate >= startDate && transactionDate <= endDate;
     });
-
     setFilteredData(filteredTransactions);
   };
 
@@ -769,7 +809,6 @@ export default function TransactionsPage() {
                     filteredData.map((row, index) => {
                       const isItemSelected = selected.includes(row.id);
                       const labelId = `enhanced-table-checkbox-${index}`;
-
                       return (
                         <TableRow
                           hover
@@ -796,9 +835,13 @@ export default function TransactionsPage() {
                             scope="row"
                             padding="none"
                           >
-                            {row?.title ? row.title : row.type}
+                            {row?.title
+                              ? row.title.toUpperCase()
+                              : row.type.toUpperCase()}
                           </TableCell>
-                          <TableCell align="left">{row?.amount}</TableCell>
+                          <TableCell align="left">
+                            {new Intl.NumberFormat("en-IN").format(row.amount)}
+                          </TableCell>
                           <TableCell align="left">
                             {new Date(
                               row?.date?.seconds * 1000
@@ -810,10 +853,14 @@ export default function TransactionsPage() {
                             })}
                           </TableCell>
                           <TableCell align="left">
-                            {row?.category ? row.category : row.type}
+                            {row?.category
+                              ? row.category.toUpperCase()
+                              : row.type.toUpperCase()}
                           </TableCell>
                           <TableCell align="left">
-                            {row?.mode ? row.mode : row.toAccount}
+                            {row?.mode
+                              ? row.mode.toUpperCase()
+                              : row.toAccount.toUpperCase()}
                           </TableCell>
                           <TableCell align="left">{row.comments}</TableCell>
                         </TableRow>

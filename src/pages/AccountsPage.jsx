@@ -31,7 +31,8 @@ import {
   collection,
   db,
   addDoc,
-  serverTimestamp,
+  query,
+  where,
   onSnapshot,
 } from "../config/firebase";
 import { Timestamp } from "firebase/firestore";
@@ -67,40 +68,61 @@ export const AccountsPage = () => {
   const handleClose = () => {
     setAnchorEl(null);
   };
+  const [loading, setLoading] = useState(false);
 
   const onCreate = async (values) => {
     const selectedDate = new Date(values.date);
+    setLoading(true); // Start loading
+
     try {
       await addDoc(collection(db, "users", user.uid, "transactions"), {
-        title: values.title,
-        mode: values.mode,
+        title: values.title.toUpperCase(),
+        mode: values.mode + "-"+ values.title.toUpperCase(),
         amount: values.amount,
         type: "Income",
         date: Timestamp.fromDate(selectedDate),
         page: "newAccount",
+        comments: values.mode.toUpperCase() + "-" + values.title.toUpperCase(),
       });
       message.success("Account added successfully!");
       console.log("Received values of form: ", values);
       setOpenModal(false);
     } catch {
       message.error("Failed to create an account.");
+    } finally {
+      setLoading(false);
     }
   };
 
+  // useEffect(() => {
+  //   if (!user) return;
+  //   const accountsRef = collection(db, "users", user.uid, "transactions");
+  //   const unsubscribe = onSnapshot(accountsRef, (snapshot) => {
+  //     const fetchedAccounts = snapshot.docs
+  //       .map((doc) => ({
+  //         id: doc.id,
+  //         ...doc.data(),
+  //       }))
+  //       .filter((account) => account.page === "newAccount");
+  //     setAccounts(fetchedAccounts);
+  //   });
+  //   return () => unsubscribe();
+  // }, [user]);
+
   useEffect(() => {
-    if (!user) return;
-    const accountsRef = collection(db, "users", user.uid, "transactions");
-    const unsubscribe = onSnapshot(accountsRef, (snapshot) => {
-      const fetchedAccounts = snapshot.docs
-        .map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }))
-        .filter((account) => account.page === "newAccount");
-      setAccounts(fetchedAccounts);
+    const q = query(
+      collection(db, "users", user.uid, "transactions"),
+      where("page", "==", "newAccount")
+    );
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const accountsData = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setAccounts(accountsData);
     });
     return () => unsubscribe();
-  }, [user]);
+  }, [user.uid]);
 
   return (
     <div>
@@ -123,58 +145,53 @@ export const AccountsPage = () => {
         title="New Account"
         okText="Add Account"
         cancelText="Cancel"
-        okButtonProps={{
-          autoFocus: true,
-          htmlType: "submit",
-        }}
         onCancel={() => setOpenModal(false)}
+        confirmLoading={loading}
+        okButtonProps={{ disabled: loading }}
         destroyOnClose
-        modalRender={(dom) => (
-          <Form
-            layout="vertical"
-            form={form}
-            name="form_in_modal"
-            clearOnDestroy
-            onFinish={(values) => onCreate(values)}
-          >
-            {dom}
-          </Form>
-        )}
+        onOk={() => form.submit()}
       >
-        <Form.Item name="title" label="Title" rules={[{ required: true }]}>
-          <Input />
-        </Form.Item>
-        <div style={{ display: "flex", gap: "16px" }}>
-          <Form.Item
-            name="date"
-            label="Date"
-            rules={[{ required: true }]}
-            style={{ width: "100%" }}
-          >
-            <DatePicker style={{ width: "100%" }} />
+        <Form
+          layout="vertical"
+          form={form}
+          name="form_in_modal"
+          onFinish={onCreate}
+        >
+          <Form.Item name="title" label="Title" rules={[{ required: true }]}>
+            <Input />
           </Form.Item>
-          <Form.Item
-            name="mode"
-            label="Mode"
-            rules={[{ required: true }]}
-            style={{ width: "100%" }}
-          >
-            <Select>
-              <Select.Option value="Cash">Cash</Select.Option>
-              <Select.Option value="Debit Card">Debit Card</Select.Option>
-              <Select.Option value="Credit Card">Credit Card</Select.Option>
-              <Select.Option value="Investment">Investment</Select.Option>
-            </Select>
-          </Form.Item>
-          <Form.Item
-            name="amount"
-            label="Amount"
-            rules={[{ required: true }]}
-            style={{ width: "100%" }}
-          >
-            <InputNumber style={{ width: "100%" }} />
-          </Form.Item>
-        </div>
+          <div style={{ display: "flex", gap: "16px" }}>
+            <Form.Item
+              name="date"
+              label="Date"
+              rules={[{ required: true }]}
+              style={{ width: "100%" }}
+            >
+              <DatePicker style={{ width: "100%" }} />
+            </Form.Item>
+            <Form.Item
+              name="mode"
+              label="Mode"
+              rules={[{ required: true }]}
+              style={{ width: "100%" }}
+            >
+              <Select>
+                <Select.Option value="Cash">Cash</Select.Option>
+                <Select.Option value="Debit Card">Debit Card</Select.Option>
+                <Select.Option value="Credit Card">Credit Card</Select.Option>
+                <Select.Option value="Investment">Investment</Select.Option>
+              </Select>
+            </Form.Item>
+            <Form.Item
+              name="amount"
+              label="Amount"
+              rules={[{ required: true }]}
+              style={{ width: "100%" }}
+            >
+              <InputNumber style={{ width: "100%" }} />
+            </Form.Item>
+          </div>
+        </Form>
       </Modal>
 
       <Grid padding={2} container rowSpacing={3} columnSpacing={2}>
@@ -234,7 +251,8 @@ export const AccountsPage = () => {
                         {account.mode.toUpperCase()}
                       </Typography>
                       <Typography variant="h6" component="div">
-                        Rs. {new Intl.NumberFormat("en-IN").format(account.amount)}
+                        Rs.{" "}
+                        {new Intl.NumberFormat("en-IN").format(account.amount)}
                       </Typography>
                     </>
                   }

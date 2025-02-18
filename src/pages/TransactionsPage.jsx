@@ -151,7 +151,9 @@ function EnhancedTableToolbar(props) {
     incomeForm.resetFields();
   };
 
+  const [loading, setLoading] = useState(false);
   const handleSubmit = async () => {
+    setLoading(true); // Start loading
     try {
       let values;
       if (activeTab === "expense") {
@@ -163,10 +165,13 @@ function EnhancedTableToolbar(props) {
           date: Timestamp.fromDate(selectedDate),
           amount: values.amount,
           mode: values.mode,
-          comments: values.comments ? values.comments : values.title.toUpperCase() + " " + "EXPENSE",
+          comments: values.comments
+            ? values.comments.toUpperCase()
+            : values.title.toUpperCase() + " EXPENSE",
           type: "Expense",
           createdAt: serverTimestamp(),
         });
+        await handleAddTransaction(values);
         message.success("Transaction created successfully!");
       } else if (activeTab === "transfer") {
         values = await transferForm.validateFields();
@@ -176,23 +181,29 @@ function EnhancedTableToolbar(props) {
           toAccount: values.toAccount,
           date: Timestamp.fromDate(selectedDate),
           amount: values.amount,
-          comments: values.comments || "",
+          comments: values.comments
+            ? values.comments.toUpperCase()
+            : "Transfer from " + values.fromAccount,
           type: "Transfer",
           createdAt: serverTimestamp(),
         });
+        await handleAddTransaction(values);
         message.success("Transaction created successfully!");
       } else if (activeTab === "income") {
         values = await incomeForm.validateFields();
         const selectedDate = new Date(values.date);
         await addDoc(collection(db, "users", user.uid, "transactions"), {
-          toAccount: values.toAccount,
+          mode: values.toAccount,
           category: values.category,
           date: Timestamp.fromDate(selectedDate),
           amount: values.amount,
-          comments: values.comments || "",
+          comments: values.comments
+            ? values.comments.toUpperCase()
+            : values.category.toUpperCase() + " INCOME",
           type: "Income",
           createdAt: serverTimestamp(),
         });
+        await handleAddTransaction(values);
         message.success("Transaction created successfully!");
       }
       onCreate({ type: activeTab, values });
@@ -201,8 +212,46 @@ function EnhancedTableToolbar(props) {
     } catch (error) {
       message.error("Failed to create transaction.");
       console.error("Validation or submission error:", error);
+    } finally {
+      setLoading(false);
     }
   };
+
+  const handleAddTransaction = async (transactionData) => {
+    try {
+      // Step 1: Get the Corresponding Account
+      const accountQuery = query(
+        collection(db, "users", user.uid, "transactions"),
+        where("mode", "==", transactionData.mode),
+        where("page", "==", "newAccount")
+      );
+  
+      const querySnapshot = await getDocs(accountQuery);
+      
+      if (!querySnapshot.empty) {
+        const accountDoc = querySnapshot.docs[0]; // Get the first matched account
+        const accountData = accountDoc.data();
+        
+        // Step 2: Calculate Updated Balance
+        let updatedAmount = accountData.amount;
+        if (transactionData.type === "Income") {
+          updatedAmount += transactionData.amount; // Increase balance
+        } else if (transactionData.type === "Expense") {
+          updatedAmount -= transactionData.amount; // Decrease balance
+        }
+  
+        // Step 3: Update Account Balance in Firestore
+        await updateDoc(accountDoc.ref, { amount: updatedAmount });
+  
+        console.log("✅ Account balance updated successfully!");
+      } else {
+        console.warn("⚠️ No matching account found for mode:", transactionData.mode);
+      }
+    } catch (error) {
+      console.error("❌ Error updating account balance:", error);
+    }
+  };
+  
 
   const showDeleteConfirm = () => {
     Modal.confirm({
@@ -231,11 +280,11 @@ function EnhancedTableToolbar(props) {
   const handleEdit = (transaction) => {
     setSelectedTransaction(transaction);
     editForm.setFieldsValue({
-      title: transaction.title,
-      category: transaction.category,
+      title: transaction.title || transaction.type,
+      category: transaction.category || transaction.type,
       date: transaction.date ? moment(transaction.date.seconds * 1000) : null,
       amount: transaction.amount,
-      mode: transaction.mode,
+      mode: transaction.mode || transaction.fromAccount,
       comments: transaction.comments,
     });
     setOpenEdit(true);
@@ -248,7 +297,7 @@ function EnhancedTableToolbar(props) {
       ...values,
       date: values.date ? new Date(values.date) : null,
     };
-
+    setLoading(true); // Start loading
     try {
       await updateDoc(
         doc(db, "users", user.uid, "transactions", selectedTransaction.id),
@@ -259,6 +308,8 @@ function EnhancedTableToolbar(props) {
     } catch (error) {
       console.error("Error updating transaction:", error);
       message.error("Failed to update transaction.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -279,7 +330,7 @@ function EnhancedTableToolbar(props) {
 
         querySnapshot.forEach((doc) => {
           const data = doc.data();
-          const modeTitle = `${data.mode}-${data.title}`; // Combine mode and title
+          const modeTitle = `${data.mode}`; // Combine mode and title
           modeSet.add(modeTitle);
         });
         setOptions([...modeSet]); // Convert set to array
@@ -341,6 +392,8 @@ function EnhancedTableToolbar(props) {
             destroyOnClose
             onCancel={() => setOpenEdit(false)}
             onOk={() => editForm.submit()}
+            confirmLoading={loading}
+            okButtonProps={{ disabled: loading }}
           >
             <Form
               layout="vertical"
@@ -412,7 +465,6 @@ function EnhancedTableToolbar(props) {
                 >
                   <InputNumber style={{ width: "100%" }} />
                 </Form.Item>
-
               </div>
               <div>
                 <Form.Item
@@ -449,6 +501,8 @@ function EnhancedTableToolbar(props) {
         onCancel={() => setOpen(false)}
         onOk={handleSubmit}
         destroyOnClose
+        confirmLoading={loading}
+        okButtonProps={{ disabled: loading }}
       >
         <Tabs activeKey={activeTab} onChange={setActiveTab}>
           <TabPane tab="Expense" key="expense">
@@ -520,7 +574,6 @@ function EnhancedTableToolbar(props) {
                 >
                   <InputNumber style={{ width: "100%" }} />
                 </Form.Item>
-
               </div>
               <Form.Item name="comments" label="Comments">
                 <TextArea rows={2} />
@@ -537,8 +590,7 @@ function EnhancedTableToolbar(props) {
                   rules={[{ required: true }]}
                   style={{ flex: 1 }}
                 >
-                  <Select
-                    onChange={(value) => setFromAccount(value)}>
+                  <Select onChange={(value) => setFromAccount(value)}>
                     {options.map((option) => (
                       <Select.Option key={option} value={option}>
                         {option}

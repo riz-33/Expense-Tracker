@@ -79,11 +79,11 @@ export const AccountsPage = () => {
         date: Timestamp.fromDate(selectedDate),
         page: "newAccount",
       });
-      message.success("Transaction created successfully!");
+      message.success("Account added successfully!");
       console.log("Received values of form: ", values);
       setOpenModal(false);
     } catch {
-      message.error("Failed to create transaction.");
+      message.error("Failed to create an account.");
     }
   };
 

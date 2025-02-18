@@ -163,7 +163,7 @@ function EnhancedTableToolbar(props) {
           date: Timestamp.fromDate(selectedDate),
           amount: values.amount,
           mode: values.mode,
-          comments: values.comments || "",
+          comments: values.comments ? values.comments : values.title.toUpperCase() + " " + "EXPENSE",
           type: "Expense",
           createdAt: serverTimestamp(),
         });
@@ -261,44 +261,35 @@ function EnhancedTableToolbar(props) {
       message.error("Failed to update transaction.");
     }
   };
-  const [modesTransactions, setModesTransactions] = useState([]);
-  const [filteredData, setFilteredData] = useState([]);
-  const [transactionModes, setTransactionModes] = useState([]);
+
+  const [options, setOptions] = useState([]);
+  const [fromAccount, setFromAccount] = useState(null);
 
   useEffect(() => {
-    if (!user) return;
-    const q = query(
-      collection(db, "users", user.uid, "transactions"),
-      where("userId", "==", user.uid),
-      where("type", "in", ["Income", "newAccount"]) // Fetch only "Income" OR "newAccount"
-    );
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      setModesTransactions(data);
-      setFilteredData(data); // Initially show all transactions
-    });
-
-    return () => unsubscribe();
-  }, [user]);
-
-  // 🔹 Fetch Available Transaction Modes from Firestore
-  useEffect(() => {
-    if (!user) return;
-
     const fetchModes = async () => {
-      const modesCollection = collection(db, "users",user.uid, "transactions"); // Assume "modes" collection stores transaction modes
-      const snapshot = await getDocs(modesCollection);
-      const modesList = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
+      try {
+        const q = query(
+          collection(db, "users", user.uid, "transactions"),
+          where("type", "==", "Income"),
+          where("page", "==", "newAccount")
+        );
 
-      setTransactionModes(modesList); // Store fetched modes
+        const querySnapshot = await getDocs(q);
+        const modeSet = new Set();
+
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          const modeTitle = `${data.mode}-${data.title}`; // Combine mode and title
+          modeSet.add(modeTitle);
+        });
+        setOptions([...modeSet]); // Convert set to array
+      } catch (error) {
+        console.error("Error fetching modes:", error);
+      }
     };
 
     fetchModes();
-  }, [user]);
+  }, []);
 
   return (
     <Toolbar
@@ -357,17 +348,17 @@ function EnhancedTableToolbar(props) {
               name="edit_form_modal"
               onFinish={onUpdate}
             >
+              <Form.Item
+                name="title"
+                label="Title"
+                style={{ flex: 1 }}
+                rules={[{ required: true }]}
+              >
+                <Input />
+              </Form.Item>
               <div style={{ display: "flex", gap: "16px" }}>
                 <Form.Item
-                  name="title"
-                  label="Title"
-                  style={{ flex: 1 }}
-                  rules={[{ required: true }]}
-                >
-                  <Input />
-                </Form.Item>
-                <Form.Item
-                  rules={[{ required: true }]}
+                  // rules={[{ required: true }]}
                   name="category"
                   label="Category"
                   style={{ flex: 1 }}
@@ -389,6 +380,20 @@ function EnhancedTableToolbar(props) {
                     <Select.Option value="debts">Debts Payments</Select.Option>
                   </Select>
                 </Form.Item>
+                <Form.Item
+                  rules={[{ required: true }]}
+                  name="mode"
+                  label="Mode"
+                  style={{ flex: 1 }}
+                >
+                  <Select>
+                    {options.map((option) => (
+                      <Select.Option key={option} value={option}>
+                        {option}
+                      </Select.Option>
+                    ))}
+                  </Select>
+                </Form.Item>
               </div>
               <div style={{ display: "flex", gap: "16px" }}>
                 <Form.Item
@@ -407,20 +412,7 @@ function EnhancedTableToolbar(props) {
                 >
                   <InputNumber style={{ width: "100%" }} />
                 </Form.Item>
-                <Form.Item
-                  rules={[{ required: true }]}
-                  name="mode"
-                  label="Mode"
-                  style={{ width: "100%" }}
-                >
-                             <Select>
-                    {transactionModes.map((mode) => (
-                      <Select.Option key={mode.id} value={mode.mode}>
-                        {mode.name}
-                      </Select.Option>
-                    ))}
-                  </Select>
-                </Form.Item>
+
               </div>
               <div>
                 <Form.Item
@@ -461,15 +453,15 @@ function EnhancedTableToolbar(props) {
         <Tabs activeKey={activeTab} onChange={setActiveTab}>
           <TabPane tab="Expense" key="expense">
             <Form form={expenseForm} layout="vertical">
+              <Form.Item
+                name="title"
+                label="Title"
+                rules={[{ required: true }]}
+                style={{ flex: 1 }}
+              >
+                <Input />
+              </Form.Item>
               <div style={{ display: "flex", gap: "16px" }}>
-                <Form.Item
-                  name="title"
-                  label="Title"
-                  rules={[{ required: true }]}
-                  style={{ flex: 1 }}
-                >
-                  <Input />
-                </Form.Item>
                 <Form.Item
                   name="category"
                   label="Category"
@@ -495,6 +487,21 @@ function EnhancedTableToolbar(props) {
                     </Select.Option>
                   </Select>
                 </Form.Item>
+
+                <Form.Item
+                  name="mode"
+                  label="Mode"
+                  rules={[{ required: true }]}
+                  style={{ flex: 1 }}
+                >
+                  <Select>
+                    {options.map((option) => (
+                      <Select.Option key={option} value={option}>
+                        {option}
+                      </Select.Option>
+                    ))}
+                  </Select>
+                </Form.Item>
               </div>
               <div style={{ display: "flex", gap: "16px" }}>
                 <Form.Item
@@ -513,20 +520,7 @@ function EnhancedTableToolbar(props) {
                 >
                   <InputNumber style={{ width: "100%" }} />
                 </Form.Item>
-                <Form.Item
-                  name="mode"
-                  label="Mode"
-                  rules={[{ required: true }]}
-                  style={{ width: "100%" }}
-                >
-                  <Select>
-                    {transactionModes.map((mode) => (
-                      <Select.Option key={mode.id} value={mode.name}>
-                        {mode.name}
-                      </Select.Option>
-                    ))}
-                  </Select>
-                </Form.Item>
+
               </div>
               <Form.Item name="comments" label="Comments">
                 <TextArea rows={2} />
@@ -543,12 +537,13 @@ function EnhancedTableToolbar(props) {
                   rules={[{ required: true }]}
                   style={{ flex: 1 }}
                 >
-                  <Select>
-                    <Select.Option value="Cash">Cash</Select.Option>
-                    <Select.Option value="Debit Card">Debit Card</Select.Option>
-                    <Select.Option value="Credit Card">
-                      Credit Card
-                    </Select.Option>
+                  <Select
+                    onChange={(value) => setFromAccount(value)}>
+                    {options.map((option) => (
+                      <Select.Option key={option} value={option}>
+                        {option}
+                      </Select.Option>
+                    ))}
                   </Select>
                 </Form.Item>
                 <Form.Item
@@ -558,11 +553,13 @@ function EnhancedTableToolbar(props) {
                   style={{ flex: 1 }}
                 >
                   <Select>
-                    <Select.Option value="Cash">Cash</Select.Option>
-                    <Select.Option value="Debit Card">Debit Card</Select.Option>
-                    <Select.Option value="Credit Card">
-                      Credit Card
-                    </Select.Option>
+                    {options
+                      .filter((option) => option !== fromAccount)
+                      .map((option) => (
+                        <Select.Option key={option} value={option}>
+                          {option}
+                        </Select.Option>
+                      ))}
                   </Select>
                 </Form.Item>
               </div>
@@ -600,11 +597,11 @@ function EnhancedTableToolbar(props) {
                   style={{ flex: 1 }}
                 >
                   <Select>
-                    <Select.Option value="Cash">Cash</Select.Option>
-                    <Select.Option value="Debit Card">Debit Card</Select.Option>
-                    <Select.Option value="Credit Card">
-                      Credit Card
-                    </Select.Option>
+                    {options.map((option) => (
+                      <Select.Option key={option} value={option}>
+                        {option}
+                      </Select.Option>
+                    ))}
                   </Select>
                 </Form.Item>
                 <Form.Item

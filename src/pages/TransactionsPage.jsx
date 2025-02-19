@@ -141,7 +141,8 @@ function EnhancedTableToolbar(props) {
   const [selectedTransaction, setSelectedTransaction] = useState(null);
 
   console.log(selectedTransaction);
-  const onCreate = (data) => {
+  const onCreate = async (data) => {
+    await handleAddTransaction(data);
     console.log("Created Transaction:", data);
   };
 
@@ -171,11 +172,11 @@ function EnhancedTableToolbar(props) {
           type: "Expense",
           createdAt: serverTimestamp(),
         });
-        await handleAddTransaction(values);
         message.success("Transaction created successfully!");
       } else if (activeTab === "transfer") {
         values = await transferForm.validateFields();
         const selectedDate = new Date(values.date);
+        await handleAddTransaction(values);
         await addDoc(collection(db, "users", user.uid, "transactions"), {
           fromAccount: values.fromAccount,
           toAccount: values.toAccount,
@@ -187,11 +188,11 @@ function EnhancedTableToolbar(props) {
           type: "Transfer",
           createdAt: serverTimestamp(),
         });
-        await handleAddTransaction(values);
         message.success("Transaction created successfully!");
       } else if (activeTab === "income") {
         values = await incomeForm.validateFields();
         const selectedDate = new Date(values.date);
+        await handleAddTransaction(values);
         await addDoc(collection(db, "users", user.uid, "transactions"), {
           mode: values.toAccount,
           category: values.category,
@@ -203,7 +204,6 @@ function EnhancedTableToolbar(props) {
           type: "Income",
           createdAt: serverTimestamp(),
         });
-        await handleAddTransaction(values);
         message.success("Transaction created successfully!");
       }
       onCreate({ type: activeTab, values });
@@ -217,41 +217,54 @@ function EnhancedTableToolbar(props) {
     }
   };
 
-  const handleAddTransaction = async (transactionData) => {
+  const handleAddTransaction = async (values) => {
+    console.log(values)
     try {
-      // Step 1: Get the Corresponding Account
-      const accountQuery = query(
-        collection(db, "users", user.uid, "transactions"),
-        where("mode", "==", transactionData.mode),
-        where("page", "==", "newAccount")
-      );
-  
-      const querySnapshot = await getDocs(accountQuery);
-      
-      if (!querySnapshot.empty) {
-        const accountDoc = querySnapshot.docs[0]; // Get the first matched account
-        const accountData = accountDoc.data();
-        
-        // Step 2: Calculate Updated Balance
-        let updatedAmount = accountData.amount;
-        if (transactionData.type === "Income") {
-          updatedAmount += transactionData.amount; // Increase balance
-        } else if (transactionData.type === "Expense") {
-          updatedAmount -= transactionData.amount; // Decrease balance
-        }
-  
-        // Step 3: Update Account Balance in Firestore
-        await updateDoc(accountDoc.ref, { amount: updatedAmount });
-  
-        console.log("✅ Account balance updated successfully!");
-      } else {
-        console.warn("⚠️ No matching account found for mode:", transactionData.mode);
-      }
+      const q = query(collection(db, "users", user.uid, "transactions"), where("page", "==", "newAccount"),where("comments", "=", values.mode));
+      const querySnapshot = await getDocs(q);
+      querySnapshot.forEach((doc) => {
+        console.log(doc.id, " => ", doc.data());
+      });
     } catch (error) {
-      console.error("❌ Error updating account balance:", error);
+      console.log("error", error)
     }
-  };
-  
+  }
+
+  // const handleAddTransaction = async (transactionData) => {
+  //   try {
+  //     // Step 1: Get the Corresponding Account
+  //     const accountQuery = query(
+  //       collection(db, "users", user.uid, "transactions"),
+  //       where("comments", "==", transactionData.mode),
+  //       where("page", "==", "newAccount")
+  //     );
+
+  //     const querySnapshot = await getDocs(accountQuery);
+
+  //     if (!querySnapshot.empty) {
+  //       const accountDoc = querySnapshot.docs[0]; // Get the first matched account
+  //       const accountData = accountDoc.data();
+
+  //       // Step 2: Calculate Updated Balance
+  //       let updatedAmount = accountData.amount;
+  //       if (transactionData.type === "Income") {
+  //         updatedAmount += transactionData.amount; // Increase balance
+  //       } else if (transactionData.type === "Expense") {
+  //         updatedAmount -= transactionData.amount; // Decrease balance
+  //       }
+
+  //       // Step 3: Update Account Balance in Firestore
+  //       await updateDoc(accountDoc.ref, { amount: updatedAmount });
+
+  //       console.log("✅ Account balance updated successfully!");
+  //     } else {
+  //       console.warn("⚠️ No matching account found for mode:", transactionData.mode);
+  //     }
+  //   } catch (error) {
+  //     console.error("❌ Error updating account balance:", error);
+  //   }
+  // };
+
 
   const showDeleteConfirm = () => {
     Modal.confirm({
@@ -330,7 +343,7 @@ function EnhancedTableToolbar(props) {
 
         querySnapshot.forEach((doc) => {
           const data = doc.data();
-          const modeTitle = `${data.mode}`; // Combine mode and title
+          const modeTitle = `${data.mode}-${data.title} `; // Combine mode and title
           modeSet.add(modeTitle);
         });
         setOptions([...modeSet]); // Convert set to array
@@ -417,20 +430,20 @@ function EnhancedTableToolbar(props) {
                   style={{ flex: 1 }}
                 >
                   <Select>
-                    <Select.Option value="housing">Housing</Select.Option>
-                    <Select.Option value="food">Food</Select.Option>
-                    <Select.Option value="transportation">
+                    <Select.Option value="Housing">Housing</Select.Option>
+                    <Select.Option value="Food">Food</Select.Option>
+                    <Select.Option value="Transportation">
                       Transportation
                     </Select.Option>
-                    <Select.Option value="health">Health</Select.Option>
-                    <Select.Option value="kids">Kids</Select.Option>
-                    <Select.Option value="personal">
+                    <Select.Option value="Health">Health</Select.Option>
+                    <Select.Option value="Kids">Kids</Select.Option>
+                    <Select.Option value="Personal Care">
                       Personal Care
                     </Select.Option>
-                    <Select.Option value="clothing">Clothing</Select.Option>
-                    <Select.Option value="gifths">Gifts</Select.Option>
-                    <Select.Option value="savings">Savings</Select.Option>
-                    <Select.Option value="debts">Debts Payments</Select.Option>
+                    <Select.Option value="Clothing">Clothing</Select.Option>
+                    <Select.Option value="Gifths">Gifts</Select.Option>
+                    <Select.Option value="Savings">Savings</Select.Option>
+                    <Select.Option value="Debts Payments">Debts Payments</Select.Option>
                   </Select>
                 </Form.Item>
                 <Form.Item
@@ -735,7 +748,8 @@ export default function TransactionsPage() {
           id: doc.id,
           ...doc.data(),
         }));
-        setTransactions(data);
+        const filteredData = data.filter((transaction) => transaction.page !== "newAccount");
+        setTransactions(filteredData);
       }
     );
     return () => unsubscribe();
@@ -771,6 +785,9 @@ export default function TransactionsPage() {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
+
+  const paginatedRows = (filteredData.length > 0 ? filteredData : transactions)
+    .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
   const sortedRows = transactions.sort((a, b) => {
     if (order === "desc") {
@@ -854,8 +871,8 @@ export default function TransactionsPage() {
                   }
                 />
                 <TableBody>
-                  {filteredData.length > 0 ? (
-                    filteredData.map((row, index) => {
+                  {paginatedRows.length > 0 ? (
+                    paginatedRows.map((row, index) => {
                       const isItemSelected = selected.includes(row.id);
                       const labelId = `enhanced-table-checkbox-${index}`;
                       return (

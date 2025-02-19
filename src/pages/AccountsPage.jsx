@@ -61,6 +61,9 @@ export const AccountsPage = () => {
   const { user } = useContext(User);
   const [form] = Form.useForm();
   const [openModal, setOpenModal] = useState(false);
+  const resetForms = () => {
+    form.resetFields();
+  };
 
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
@@ -77,7 +80,8 @@ export const AccountsPage = () => {
     try {
       await addDoc(collection(db, "users", user.uid, "transactions"), {
         title: values.title.toUpperCase(),
-        mode: values.mode + "-"+ values.title.toUpperCase(),
+        // mode: values.mode + "-"+ values.title.toUpperCase(),
+        mode: values.mode,
         amount: values.amount,
         type: "Income",
         date: Timestamp.fromDate(selectedDate),
@@ -87,27 +91,13 @@ export const AccountsPage = () => {
       message.success("Account added successfully!");
       console.log("Received values of form: ", values);
       setOpenModal(false);
+      resetForms();
     } catch {
       message.error("Failed to create an account.");
     } finally {
       setLoading(false);
     }
   };
-
-  // useEffect(() => {
-  //   if (!user) return;
-  //   const accountsRef = collection(db, "users", user.uid, "transactions");
-  //   const unsubscribe = onSnapshot(accountsRef, (snapshot) => {
-  //     const fetchedAccounts = snapshot.docs
-  //       .map((doc) => ({
-  //         id: doc.id,
-  //         ...doc.data(),
-  //       }))
-  //       .filter((account) => account.page === "newAccount");
-  //     setAccounts(fetchedAccounts);
-  //   });
-  //   return () => unsubscribe();
-  // }, [user]);
 
   useEffect(() => {
     const q = query(
@@ -136,7 +126,9 @@ export const AccountsPage = () => {
           paddingRight: 6,
         }}
       >
-        <Button variant="contained" onClick={() => setOpenModal(true)}>
+        <Button variant="contained" onClick={() => setOpenModal(true)}
+          style={{ padding: "2px 12px" }}
+        >
           Add Account
         </Button>
       </Grid>
@@ -194,12 +186,12 @@ export const AccountsPage = () => {
         </Form>
       </Modal>
 
-      <Grid padding={2} container rowSpacing={3} columnSpacing={2}>
+      <Grid padding={2} container rowSpacing={2} columnSpacing={2}>
         {accounts.map((account, index) => {
           const { icon, color } = getAccountStyle(account.mode);
           return (
             <Grid item xs={12} sm={6} md={4} key={index}>
-              <Card sx={{ maxWidth: 400 }}>
+              <Card sx={{ maxWidth: 420 }}>
                 <CardHeader
                   avatar={
                     <Avatar sx={{ bgcolor: color, marginBottom: 8 }}>
@@ -248,7 +240,7 @@ export const AccountsPage = () => {
                         {account.title.toUpperCase()}
                       </Typography>
                       <Typography sx={{ color: "text.secondary", mb: 1.5 }}>
-                        {account.mode.toUpperCase()}
+                        {account.mode.toUpperCase() + "-" + account.title.toUpperCase()}
                       </Typography>
                       <Typography variant="h6" component="div">
                         Rs.{" "}

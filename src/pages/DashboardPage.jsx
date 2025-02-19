@@ -195,7 +195,7 @@ export const DashboardPage = () => {
 
   return (
     <div>
-      <div className="group-1">
+      <div style={{ cursor: "pointer" }} className="group-1">
         <Grid padding={2} container rowSpacing={3} columnSpacing={5}>
           <Grid item xs={12} sm={6} md={3}>
             <Card
@@ -204,6 +204,14 @@ export const DashboardPage = () => {
                 alignItems: "center",
                 justifyContent: "center",
                 display: "flex",
+              }}
+              sx={{
+                ':hover': {
+                  boxShadow: 15, // theme.shadows[20]
+                  backgroundColor: "#1976d2",
+                  color: "white",
+                  // color:"text.primary",
+                },
               }}
             >
               <CardContent style={{ textAlign: "center" }}>
@@ -230,6 +238,14 @@ export const DashboardPage = () => {
                 justifyContent: "center",
                 display: "flex",
               }}
+              sx={{
+                ':hover': {
+                  boxShadow: 15, // theme.shadows[20]
+                  backgroundColor: "#1976d2",
+                  color: "white",
+                  // color:"text.primary",
+                },
+              }}
             >
               <CardContent style={{ textAlign: "center" }}>
                 <Typography
@@ -254,6 +270,14 @@ export const DashboardPage = () => {
                 alignItems: "center",
                 justifyContent: "center",
                 display: "flex",
+              }}
+              sx={{
+                ':hover': {
+                  boxShadow: 15, // theme.shadows[20]
+                  backgroundColor: "#1976d2",
+                  color: "white",
+                  // color:"text.primary",
+                },
               }}
             >
               <CardContent style={{ textAlign: "center" }}>
@@ -280,6 +304,14 @@ export const DashboardPage = () => {
                 justifyContent: "center",
                 display: "flex",
               }}
+              sx={{
+                ':hover': {
+                  boxShadow: 15, // theme.shadows[20]
+                  backgroundColor: "#1976d2",
+                  color: "white",
+                  // color:"text.primary",
+                },
+              }}
             >
               <CardContent style={{ textAlign: "center" }}>
                 <Typography
@@ -300,7 +332,12 @@ export const DashboardPage = () => {
       <div className="group-2">
         <Grid padding={2} container rowSpacing={3} columnSpacing={4}>
           <Grid item xs={12} sm={6} md={6}>
-            <Card style={{ backgroundColor: "lightgrey" }}>
+            <Card style={{ backgroundColor: "lightgrey" }}
+              sx={{
+                ':hover': {
+                  boxShadow: 15,
+                },
+              }}>
               <Chart
                 chartType="PieChart"
                 data={chartData}
@@ -317,7 +354,11 @@ export const DashboardPage = () => {
             </Card>
           </Grid>
           <Grid item xs={12} sm={6} md={6}>
-            <Card>
+            <Card sx={{
+                ':hover': {
+                  boxShadow: 15,
+                },
+              }}>
               <Chart
                 chartType="ColumnChart"
                 width="100%"
@@ -339,7 +380,11 @@ export const DashboardPage = () => {
       <div className="group-3">
         <Grid padding={2} container>
           <Grid item xs={12}>
-            <Card>
+            <Card sx={{
+                ':hover': {
+                  boxShadow: 15,
+                },
+              }}>
               <Chart
                 chartType="LineChart"
                 width="100%"
@@ -362,7 +407,11 @@ export const DashboardPage = () => {
       <div className="group-4">
         <Grid padding={2} container>
           <Grid item xs={12}>
-            <Card variant="outlined">
+            <Card variant="outlined" sx={{
+                ':hover': {
+                  boxShadow: 15,
+                },
+              }}>
               <CardContent>
                 <Typography variant="h5" component="div">
                   Detail Summary

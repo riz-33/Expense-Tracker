@@ -86,7 +86,8 @@ export const AccountsPage = () => {
         type: "Income",
         date: Timestamp.fromDate(selectedDate),
         page: "newAccount",
-        comments: values.mode.toUpperCase() + "-" + values.title.toUpperCase(),
+        transMode: values.mode + "-" + values.title.toUpperCase(),
+        // comments: values.mode.toUpperCase() + "-" + values.title.toUpperCase(),
       });
       message.success("Account added successfully!");
       console.log("Received values of form: ", values);

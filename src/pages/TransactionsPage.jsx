@@ -50,7 +50,7 @@ import {
   where,
   getDocs,
 } from "../config/firebase";
-import { Timestamp } from "firebase/firestore";
+import { limit, Timestamp } from "firebase/firestore";
 import User from "../context/user";
 import { EditForm } from "../components/EditForm";
 const { TextArea } = Input;
@@ -142,7 +142,6 @@ function EnhancedTableToolbar(props) {
 
   console.log(selectedTransaction);
   const onCreate = async (data) => {
-    await handleAddTransaction(data);
     console.log("Created Transaction:", data);
   };
 
@@ -157,55 +156,62 @@ function EnhancedTableToolbar(props) {
     setLoading(true); // Start loading
     try {
       let values;
+
       if (activeTab === "expense") {
         values = await expenseForm.validateFields();
-        const selectedDate = new Date(values.date);
-        await addDoc(collection(db, "users", user.uid, "transactions"), {
+      } else if (activeTab === "transfer") {
+        values = await transferForm.validateFields();
+      } else if (activeTab === "income") {
+        values = await incomeForm.validateFields();
+      }
+      await handleAddTransaction(values); // Now values is defined
+
+      const selectedDate = new Date(values.date);
+      let transactionData = {
+        date: Timestamp.fromDate(selectedDate),
+        amount: values.amount,
+        comments: values.comments || "",
+        createdAt: serverTimestamp(),
+      };
+
+      if (activeTab === "expense") {
+        transactionData = {
+          ...transactionData,
           title: values.title,
           category: values.category,
-          date: Timestamp.fromDate(selectedDate),
-          amount: values.amount,
           mode: values.mode,
+          type: "Expense",
           comments: values.comments
             ? values.comments.toUpperCase()
             : values.title.toUpperCase() + " EXPENSE",
-          type: "Expense",
-          createdAt: serverTimestamp(),
-        });
-        message.success("Transaction created successfully!");
+        };
       } else if (activeTab === "transfer") {
-        values = await transferForm.validateFields();
-        const selectedDate = new Date(values.date);
-        await handleAddTransaction(values);
-        await addDoc(collection(db, "users", user.uid, "transactions"), {
+        transactionData = {
+          ...transactionData,
           fromAccount: values.fromAccount,
           toAccount: values.toAccount,
-          date: Timestamp.fromDate(selectedDate),
-          amount: values.amount,
+          type: "Transfer",
           comments: values.comments
             ? values.comments.toUpperCase()
             : "Transfer from " + values.fromAccount,
-          type: "Transfer",
-          createdAt: serverTimestamp(),
-        });
-        message.success("Transaction created successfully!");
+        };
       } else if (activeTab === "income") {
-        values = await incomeForm.validateFields();
-        const selectedDate = new Date(values.date);
-        await handleAddTransaction(values);
-        await addDoc(collection(db, "users", user.uid, "transactions"), {
+        transactionData = {
+          ...transactionData,
           mode: values.toAccount,
           category: values.category,
-          date: Timestamp.fromDate(selectedDate),
-          amount: values.amount,
+          type: "Income",
           comments: values.comments
             ? values.comments.toUpperCase()
             : values.category.toUpperCase() + " INCOME",
-          type: "Income",
-          createdAt: serverTimestamp(),
-        });
-        message.success("Transaction created successfully!");
+        };
       }
+
+      await addDoc(
+        collection(db, "users", user.uid, "transactions"),
+        transactionData
+      );
+      message.success("Transaction created successfully!");
       onCreate({ type: activeTab, values });
       setOpen(false);
       resetForms();
@@ -218,54 +224,65 @@ function EnhancedTableToolbar(props) {
   };
 
   const handleAddTransaction = async (values) => {
-    console.log(values)
+    console.log("Transaction values:", values);
     try {
-      const q = query(collection(db, "users", user.uid, "transactions"), where("page", "==", "newAccount"),where("comments", "=", values.mode));
+      const q = query(
+        collection(db, "users", user.uid, "transactions"),
+        where("page", "==", "newAccount"),
+        where("transMode", "==", values.mode || values.toAccount),
+      );
       const querySnapshot = await getDocs(q);
-      querySnapshot.forEach((doc) => {
-        console.log(doc.id, " => ", doc.data());
-      });
+      if (querySnapshot.empty) {
+        console.log("No matching transaction found.");
+      } else {
+        querySnapshot.forEach((doc) => {
+          console.log("Transaction found:", doc.id, "=>", doc.data());
+        });
+      }
     } catch (error) {
-      console.log("error", error)
+      console.error("Error fetching transactions:", error);
     }
-  }
+  };
 
   // const handleAddTransaction = async (transactionData) => {
+  //   console.log(transactionData)
   //   try {
+  //     if (!transactionData || !transactionData.mode) {
+  //       throw new Error("Transaction mode is undefined or invalid");
+  //     }
   //     // Step 1: Get the Corresponding Account
   //     const accountQuery = query(
   //       collection(db, "users", user.uid, "transactions"),
-  //       where("comments", "==", transactionData.mode),
+  //       where("transMode", "==", transactionData.mode),
   //       where("page", "==", "newAccount")
   //     );
-
+  
   //     const querySnapshot = await getDocs(accountQuery);
-
+  
   //     if (!querySnapshot.empty) {
   //       const accountDoc = querySnapshot.docs[0]; // Get the first matched account
   //       const accountData = accountDoc.data();
-
+  
   //       // Step 2: Calculate Updated Balance
-  //       let updatedAmount = accountData.amount;
+  //       let updatedAmount = accountData.amount || 0; // Ensure it's a number
   //       if (transactionData.type === "Income") {
-  //         updatedAmount += transactionData.amount; // Increase balance
+  //         updatedAmount += transactionData.amount;
   //       } else if (transactionData.type === "Expense") {
-  //         updatedAmount -= transactionData.amount; // Decrease balance
+  //         updatedAmount -= transactionData.amount;
   //       }
-
+  
   //       // Step 3: Update Account Balance in Firestore
   //       await updateDoc(accountDoc.ref, { amount: updatedAmount });
-
+  
   //       console.log("✅ Account balance updated successfully!");
   //     } else {
-  //       console.warn("⚠️ No matching account found for mode:", transactionData.mode);
+  //       console.warn("⚠️ No matching account found for mode:");
   //     }
   //   } catch (error) {
   //     console.error("❌ Error updating account balance:", error);
   //   }
   // };
-
-
+  
   const showDeleteConfirm = () => {
     Modal.confirm({
       title: "Are you sure you want to delete the selected transaction(s)?",
@@ -343,7 +360,7 @@ function EnhancedTableToolbar(props) {
 
         querySnapshot.forEach((doc) => {
           const data = doc.data();
-          const modeTitle = `${data.mode}-${data.title} `; // Combine mode and title
+          const modeTitle = `${data.mode}-${data.title}`; // Combine mode and title
           modeSet.add(modeTitle);
         });
         setOptions([...modeSet]); // Convert set to array
@@ -443,7 +460,9 @@ function EnhancedTableToolbar(props) {
                     <Select.Option value="Clothing">Clothing</Select.Option>
                     <Select.Option value="Gifths">Gifts</Select.Option>
                     <Select.Option value="Savings">Savings</Select.Option>
-                    <Select.Option value="Debts Payments">Debts Payments</Select.Option>
+                    <Select.Option value="Debts Payments">
+                      Debts Payments
+                    </Select.Option>
                   </Select>
                 </Form.Item>
                 <Form.Item
@@ -748,7 +767,9 @@ export default function TransactionsPage() {
           id: doc.id,
           ...doc.data(),
         }));
-        const filteredData = data.filter((transaction) => transaction.page !== "newAccount");
+        const filteredData = data.filter(
+          (transaction) => transaction.page !== "newAccount"
+        );
         setTransactions(filteredData);
       }
     );
@@ -786,8 +807,9 @@ export default function TransactionsPage() {
     setPage(0);
   };
 
-  const paginatedRows = (filteredData.length > 0 ? filteredData : transactions)
-    .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+  const paginatedRows = (
+    filteredData.length > 0 ? filteredData : transactions
+  ).slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
   const sortedRows = transactions.sort((a, b) => {
     if (order === "desc") {

@@ -51,9 +51,8 @@ import {
   getDocs,
   getDoc,
 } from "../config/firebase";
-import { limit, Timestamp } from "firebase/firestore";
+import { Timestamp } from "firebase/firestore";
 import User from "../context/user";
-import { EditForm } from "../components/EditForm";
 const { TextArea } = Input;
 const { TabPane } = Tabs;
 
@@ -137,13 +136,9 @@ function EnhancedTableToolbar(props) {
   const [isEditing, setIsEditing] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState(null);
   const [loading, setLoading] = useState(false);
-
-  // Forms for each transaction type
   const [expenseForm] = Form.useForm();
   const [transferForm] = Form.useForm();
   const [incomeForm] = Form.useForm();
-
-  // Options for “mode” selections (fetched from Firestore)
   const [options, setOptions] = useState([]);
   const [fromAccount, setFromAccount] = useState(null);
 
@@ -167,17 +162,14 @@ function EnhancedTableToolbar(props) {
         console.error("Error fetching modes:", error);
       }
     };
-
     fetchModes();
   }, [user.uid]);
 
-  // Prepares a Firestore transaction object based on form values and active tab
   const prepareTransactionData = (values, tabKey) => {
     const selectedDate = new Date(values.date);
     let transactionData = {
       date: Timestamp.fromDate(selectedDate),
       amount: values.amount,
-      comments: values.comments || "",
       createdAt: serverTimestamp(),
     };
 
@@ -216,7 +208,6 @@ function EnhancedTableToolbar(props) {
     return transactionData;
   };
 
-  // Called on modal submission when adding a new transaction
   const handleSubmit = async () => {
     setLoading(true);
     try {
@@ -230,17 +221,12 @@ function EnhancedTableToolbar(props) {
       }
 
       const transactionData = prepareTransactionData(values, activeTab);
-
-      // Create the new transaction in Firestore
       await addDoc(
         collection(db, "users", user.uid, "transactions"),
         transactionData
       );
-
-      // Update account balances
       await handleAddTransaction({ type: activeTab, values });
       await handleTransferTransaction({ type: activeTab, values });
-
       message.success("Transaction created successfully!");
       closeModal();
     } catch (error) {
@@ -251,7 +237,76 @@ function EnhancedTableToolbar(props) {
     }
   };
 
-  // Called on modal submission when updating an existing transaction
+  const handleAddTransaction = async (data) => {
+    try {
+      const accountQuery = query(
+        collection(db, "users", user.uid, "transactions"),
+        where("transMode", "==", data.values.mode || data.values.toAccount),
+        where("page", "==", "newAccount")
+      );
+
+      const querySnapshot = await getDocs(accountQuery);
+      if (!querySnapshot.empty) {
+        const accountDoc = querySnapshot.docs[0];
+        const accountData = accountDoc.data();
+
+        let updatedAmount = accountData.amount || 0;
+        if (data.type === "income") {
+          updatedAmount += data.values.amount;
+        } else if (data.type === "expense") {
+          updatedAmount -= data.values.amount;
+        }
+        await updateDoc(accountDoc.ref, { amount: updatedAmount });
+      } else {
+        console.warn("No matching account found for mode:");
+      }
+    } catch (error) {
+      console.error("Error updating account balance:", error);
+    }
+  };
+
+  const handleTransferTransaction = async (data) => {
+    try {
+      const { fromAccount, toAccount, amount } = data.values;
+      if (!fromAccount || !toAccount || !amount) {
+        // console.warn("⚠️ Missing transfer details!");
+        return;
+      }
+      const fromAccountQuery = query(
+        collection(db, "users", user.uid, "transactions"),
+        where("transMode", "==", fromAccount),
+        where("page", "==", "newAccount")
+      );
+      const toAccountQuery = query(
+        collection(db, "users", user.uid, "transactions"),
+        where("transMode", "==", toAccount),
+        where("page", "==", "newAccount")
+      );
+
+      const [fromSnapshot, toSnapshot] = await Promise.all([
+        getDocs(fromAccountQuery),
+        getDocs(toAccountQuery),
+      ]);
+
+      if (!fromSnapshot.empty && !toSnapshot.empty) {
+        const fromDoc = fromSnapshot.docs[0];
+        const toDoc = toSnapshot.docs[0];
+
+        const fromData = fromDoc.data();
+        const toData = toDoc.data();
+
+        await updateDoc(fromDoc.ref, {
+          amount: (fromData.amount || 0) - amount,
+        });
+        await updateDoc(toDoc.ref, { amount: (toData.amount || 0) + amount });
+      } else {
+        console.warn("⚠️ One or both accounts not found!");
+      }
+    } catch (error) {
+      console.error("❌ Error processing transfer:", error);
+    }
+  };
+
   const handleUpdate = async () => {
     if (!selectedTransaction) return;
     setLoading(true);
@@ -278,7 +333,7 @@ function EnhancedTableToolbar(props) {
         return;
       }
       const prevTransaction = transactionSnap.data();
-
+      console.log(prevTransaction.mode);
       // Reverse previous account–balance changes
       if (
         prevTransaction.type === "Income" ||
@@ -296,6 +351,7 @@ function EnhancedTableToolbar(props) {
         const accountSnapshot = await getDocs(accountQuery);
         if (!accountSnapshot.empty) {
           const accountDoc = accountSnapshot.docs[0];
+          console.log(accountDoc.data().amount);
           let updatedAmount = accountDoc.data().amount || 0;
           if (prevTransaction.type === "Income") {
             updatedAmount -= prevTransaction.amount;
@@ -303,6 +359,7 @@ function EnhancedTableToolbar(props) {
             updatedAmount += prevTransaction.amount;
           }
           // Apply the new amount changes
+          console.log(transactionData);
           if (transactionData.type === "Income") {
             updatedAmount += transactionData.amount;
           } else if (transactionData.type === "Expense") {

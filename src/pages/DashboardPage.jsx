@@ -206,7 +206,7 @@ export const DashboardPage = () => {
                 display: "flex",
               }}
               sx={{
-                ':hover': {
+                ":hover": {
                   boxShadow: 15, // theme.shadows[20]
                   backgroundColor: "#1976d2",
                   color: "white",
@@ -239,7 +239,7 @@ export const DashboardPage = () => {
                 display: "flex",
               }}
               sx={{
-                ':hover': {
+                ":hover": {
                   boxShadow: 15, // theme.shadows[20]
                   backgroundColor: "#1976d2",
                   color: "white",
@@ -272,7 +272,7 @@ export const DashboardPage = () => {
                 display: "flex",
               }}
               sx={{
-                ':hover': {
+                ":hover": {
                   boxShadow: 15, // theme.shadows[20]
                   backgroundColor: "#1976d2",
                   color: "white",
@@ -305,7 +305,7 @@ export const DashboardPage = () => {
                 display: "flex",
               }}
               sx={{
-                ':hover': {
+                ":hover": {
                   boxShadow: 15, // theme.shadows[20]
                   backgroundColor: "#1976d2",
                   color: "white",
@@ -332,12 +332,13 @@ export const DashboardPage = () => {
       <div className="group-2">
         <Grid padding={2} container rowSpacing={3} columnSpacing={4}>
           <Grid item xs={12} sm={6} md={6}>
-            <Card style={{ backgroundColor: "lightgrey" }}
+            <Card
               sx={{
-                ':hover': {
+                ":hover": {
                   boxShadow: 15,
                 },
-              }}>
+              }}
+            >
               <Chart
                 chartType="PieChart"
                 data={chartData}
@@ -348,17 +349,18 @@ export const DashboardPage = () => {
                   legend: { position: "bottom" },
                   pieHole: 0.5, // Donut chart effect
                   animation: { duration: 1000, easing: "out" },
-                  backgroundColor: "lightGrey",
                 }}
               />
             </Card>
           </Grid>
           <Grid item xs={12} sm={6} md={6}>
-            <Card sx={{
-                ':hover': {
+            <Card
+              sx={{
+                ":hover": {
                   boxShadow: 15,
                 },
-              }}>
+              }}
+            >
               <Chart
                 chartType="ColumnChart"
                 width="100%"
@@ -380,11 +382,13 @@ export const DashboardPage = () => {
       <div className="group-3">
         <Grid padding={2} container>
           <Grid item xs={12}>
-            <Card sx={{
-                ':hover': {
+            <Card
+              sx={{
+                ":hover": {
                   boxShadow: 15,
                 },
-              }}>
+              }}
+            >
               <Chart
                 chartType="LineChart"
                 width="100%"
@@ -407,11 +411,14 @@ export const DashboardPage = () => {
       <div className="group-4">
         <Grid padding={2} container>
           <Grid item xs={12}>
-            <Card variant="outlined" sx={{
-                ':hover': {
+            <Card
+              variant="outlined"
+              sx={{
+                ":hover": {
                   boxShadow: 15,
                 },
-              }}>
+              }}
+            >
               <CardContent>
                 <Typography variant="h5" component="div">
                   Detail Summary
@@ -451,14 +458,24 @@ export const DashboardPage = () => {
                                 })}
                               </TableCell>
                               <TableCell>
-                                {item?.title ? item.title.toUpperCase() : item.type.toUpperCase()}
-                              </TableCell>
-                              <TableCell>{new Intl.NumberFormat("en-IN").format(item.amount)}</TableCell>
-                              <TableCell>
-                                {item?.category ? item.category.toUpperCase() : item.type.toUpperCase()}
+                                {item?.title
+                                  ? item.title.toUpperCase()
+                                  : item.type.toUpperCase()}
                               </TableCell>
                               <TableCell>
-                                {item?.mode ? item.mode.toUpperCase() : item.toAccount.toUpperCase()}
+                                {new Intl.NumberFormat("en-IN").format(
+                                  item.amount
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                {item?.category
+                                  ? item.category.toUpperCase()
+                                  : item.type.toUpperCase()}
+                              </TableCell>
+                              <TableCell>
+                                {item?.mode
+                                  ? item.mode.toUpperCase()
+                                  : item.toAccount.toUpperCase()}
                               </TableCell>
                               <TableCell>{item?.comments}</TableCell>
                             </TableRow>

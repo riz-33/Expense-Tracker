@@ -127,7 +127,9 @@ export const AccountsPage = () => {
           paddingRight: 6,
         }}
       >
-        <Button variant="contained" onClick={() => setOpenModal(true)}
+        <Button
+          variant="contained"
+          onClick={() => setOpenModal(true)}
           style={{ padding: "2px 12px" }}
         >
           Add Account
@@ -241,10 +243,12 @@ export const AccountsPage = () => {
                         {account.title.toUpperCase()}
                       </Typography>
                       <Typography sx={{ color: "text.secondary", mb: 1.5 }}>
-                        {account.mode.toUpperCase() + "-" + account.title.toUpperCase()}
+                        {account.mode.toUpperCase() +
+                          "-" +
+                          account.title.toUpperCase()}
                       </Typography>
                       <Typography variant="h6" component="div">
-                        Rs.{" "}
+                        {user.currency + "."}{" "}
                         {new Intl.NumberFormat("en-IN").format(account.amount)}
                       </Typography>
                     </>

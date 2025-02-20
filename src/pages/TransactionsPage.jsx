@@ -49,6 +49,7 @@ import {
   query,
   where,
   getDocs,
+  getDoc,
 } from "../config/firebase";
 import { limit, Timestamp } from "firebase/firestore";
 import User from "../context/user";
@@ -131,218 +132,18 @@ EnhancedTableHead.propTypes = {
 function EnhancedTableToolbar(props) {
   const { numSelected, selected, setSelected, transactions } = props;
   const { user } = useContext(User);
-  const [editForm] = Form.useForm();
-  const [openEdit, setOpenEdit] = useState(false);
-  const [activeTab, setActiveTab] = useState("expense");
   const [open, setOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("expense");
+  const [isEditing, setIsEditing] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  // Forms for each transaction type
   const [expenseForm] = Form.useForm();
   const [transferForm] = Form.useForm();
   const [incomeForm] = Form.useForm();
-  const [selectedTransaction, setSelectedTransaction] = useState(null);
 
-  console.log(selectedTransaction);
-  const onCreate = async (data) => {
-    console.log("Created Transaction:", data);
-  };
-
-  const resetForms = () => {
-    expenseForm.resetFields();
-    transferForm.resetFields();
-    incomeForm.resetFields();
-  };
-
-  const [loading, setLoading] = useState(false);
-  const handleSubmit = async () => {
-    setLoading(true); // Start loading
-    try {
-      let values;
-
-      if (activeTab === "expense") {
-        values = await expenseForm.validateFields();
-      } else if (activeTab === "transfer") {
-        values = await transferForm.validateFields();
-      } else if (activeTab === "income") {
-        values = await incomeForm.validateFields();
-      }
-      await handleAddTransaction(values); // Now values is defined
-
-      const selectedDate = new Date(values.date);
-      let transactionData = {
-        date: Timestamp.fromDate(selectedDate),
-        amount: values.amount,
-        comments: values.comments || "",
-        createdAt: serverTimestamp(),
-      };
-
-      if (activeTab === "expense") {
-        transactionData = {
-          ...transactionData,
-          title: values.title,
-          category: values.category,
-          mode: values.mode,
-          type: "Expense",
-          comments: values.comments
-            ? values.comments.toUpperCase()
-            : values.title.toUpperCase() + " EXPENSE",
-        };
-      } else if (activeTab === "transfer") {
-        transactionData = {
-          ...transactionData,
-          fromAccount: values.fromAccount,
-          toAccount: values.toAccount,
-          type: "Transfer",
-          comments: values.comments
-            ? values.comments.toUpperCase()
-            : "Transfer from " + values.fromAccount,
-        };
-      } else if (activeTab === "income") {
-        transactionData = {
-          ...transactionData,
-          mode: values.toAccount,
-          category: values.category,
-          type: "Income",
-          comments: values.comments
-            ? values.comments.toUpperCase()
-            : values.category.toUpperCase() + " INCOME",
-        };
-      }
-
-      await addDoc(
-        collection(db, "users", user.uid, "transactions"),
-        transactionData
-      );
-      message.success("Transaction created successfully!");
-      onCreate({ type: activeTab, values });
-      setOpen(false);
-      resetForms();
-    } catch (error) {
-      message.error("Failed to create transaction.");
-      console.error("Validation or submission error:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleAddTransaction = async (values) => {
-    console.log("Transaction values:", values);
-    try {
-      const q = query(
-        collection(db, "users", user.uid, "transactions"),
-        where("page", "==", "newAccount"),
-        where("transMode", "==", values.mode || values.toAccount),
-      );
-      const querySnapshot = await getDocs(q);
-      if (querySnapshot.empty) {
-        console.log("No matching transaction found.");
-      } else {
-        querySnapshot.forEach((doc) => {
-          console.log("Transaction found:", doc.id, "=>", doc.data());
-        });
-      }
-    } catch (error) {
-      console.error("Error fetching transactions:", error);
-    }
-  };
-
-  // const handleAddTransaction = async (transactionData) => {
-  //   console.log(transactionData)
-  //   try {
-  //     if (!transactionData || !transactionData.mode) {
-  //       throw new Error("Transaction mode is undefined or invalid");
-  //     }
-  //     // Step 1: Get the Corresponding Account
-  //     const accountQuery = query(
-  //       collection(db, "users", user.uid, "transactions"),
-  //       where("transMode", "==", transactionData.mode),
-  //       where("page", "==", "newAccount")
-  //     );
-  
-  //     const querySnapshot = await getDocs(accountQuery);
-  
-  //     if (!querySnapshot.empty) {
-  //       const accountDoc = querySnapshot.docs[0]; // Get the first matched account
-  //       const accountData = accountDoc.data();
-  
-  //       // Step 2: Calculate Updated Balance
-  //       let updatedAmount = accountData.amount || 0; // Ensure it's a number
-  //       if (transactionData.type === "Income") {
-  //         updatedAmount += transactionData.amount;
-  //       } else if (transactionData.type === "Expense") {
-  //         updatedAmount -= transactionData.amount;
-  //       }
-  
-  //       // Step 3: Update Account Balance in Firestore
-  //       await updateDoc(accountDoc.ref, { amount: updatedAmount });
-  
-  //       console.log("✅ Account balance updated successfully!");
-  //     } else {
-  //       console.warn("⚠️ No matching account found for mode:");
-  //     }
-  //   } catch (error) {
-  //     console.error("❌ Error updating account balance:", error);
-  //   }
-  // };
-  
-  const showDeleteConfirm = () => {
-    Modal.confirm({
-      title: "Are you sure you want to delete the selected transaction(s)?",
-      icon: <ExclamationCircleFilled />,
-      okText: "Yes",
-      okType: "danger",
-      cancelText: "No",
-      onOk: async () => {
-        try {
-          await Promise.all(
-            selected.map((id) =>
-              deleteDoc(doc(db, "users", user.uid, "transactions", id))
-            )
-          );
-          message.info("Transaction(s) deleted successfully!");
-          setSelected([]);
-        } catch (error) {
-          console.error("Error deleting transaction(s):", error);
-          message.error("Failed to delete transaction(s).");
-        }
-      },
-    });
-  };
-
-  const handleEdit = (transaction) => {
-    setSelectedTransaction(transaction);
-    editForm.setFieldsValue({
-      title: transaction.title || transaction.type,
-      category: transaction.category || transaction.type,
-      date: transaction.date ? moment(transaction.date.seconds * 1000) : null,
-      amount: transaction.amount,
-      mode: transaction.mode || transaction.fromAccount,
-      comments: transaction.comments,
-    });
-    setOpenEdit(true);
-  };
-
-  const onUpdate = async (values) => {
-    if (!selectedTransaction) return;
-
-    const updatedTransaction = {
-      ...values,
-      date: values.date ? new Date(values.date) : null,
-    };
-    setLoading(true); // Start loading
-    try {
-      await updateDoc(
-        doc(db, "users", user.uid, "transactions", selectedTransaction.id),
-        updatedTransaction
-      );
-      message.success("Transaction updated successfully!");
-      setOpenEdit(false);
-    } catch (error) {
-      console.error("Error updating transaction:", error);
-      message.error("Failed to update transaction.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // Options for “mode” selections (fetched from Firestore)
   const [options, setOptions] = useState([]);
   const [fromAccount, setFromAccount] = useState(null);
 
@@ -354,23 +155,378 @@ function EnhancedTableToolbar(props) {
           where("type", "==", "Income"),
           where("page", "==", "newAccount")
         );
-
         const querySnapshot = await getDocs(q);
         const modeSet = new Set();
-
         querySnapshot.forEach((doc) => {
           const data = doc.data();
-          const modeTitle = `${data.mode}-${data.title}`; // Combine mode and title
+          const modeTitle = `${data.mode}-${data.title}`;
           modeSet.add(modeTitle);
         });
-        setOptions([...modeSet]); // Convert set to array
+        setOptions([...modeSet]);
       } catch (error) {
         console.error("Error fetching modes:", error);
       }
     };
 
     fetchModes();
-  }, []);
+  }, [user.uid]);
+
+  // Prepares a Firestore transaction object based on form values and active tab
+  const prepareTransactionData = (values, tabKey) => {
+    const selectedDate = new Date(values.date);
+    let transactionData = {
+      date: Timestamp.fromDate(selectedDate),
+      amount: values.amount,
+      comments: values.comments || "",
+      createdAt: serverTimestamp(),
+    };
+
+    if (tabKey === "expense") {
+      transactionData = {
+        ...transactionData,
+        title: values.title,
+        category: values.category,
+        mode: values.mode,
+        type: "Expense",
+        comments: values.comments
+          ? values.comments.toUpperCase()
+          : values.title.toUpperCase() + " EXPENSE",
+      };
+    } else if (tabKey === "transfer") {
+      transactionData = {
+        ...transactionData,
+        fromAccount: values.fromAccount,
+        toAccount: values.toAccount,
+        type: "Transfer",
+        comments: values.comments
+          ? values.comments.toUpperCase()
+          : "Transfer from " + values.fromAccount,
+      };
+    } else if (tabKey === "income") {
+      transactionData = {
+        ...transactionData,
+        mode: values.toAccount,
+        category: values.category,
+        type: "Income",
+        comments: values.comments
+          ? values.comments.toUpperCase()
+          : values.category.toUpperCase(),
+      };
+    }
+    return transactionData;
+  };
+
+  // Called on modal submission when adding a new transaction
+  const handleSubmit = async () => {
+    setLoading(true);
+    try {
+      let values;
+      if (activeTab === "expense") {
+        values = await expenseForm.validateFields();
+      } else if (activeTab === "transfer") {
+        values = await transferForm.validateFields();
+      } else if (activeTab === "income") {
+        values = await incomeForm.validateFields();
+      }
+
+      const transactionData = prepareTransactionData(values, activeTab);
+
+      // Create the new transaction in Firestore
+      await addDoc(
+        collection(db, "users", user.uid, "transactions"),
+        transactionData
+      );
+
+      // Update account balances
+      await handleAddTransaction({ type: activeTab, values });
+      await handleTransferTransaction({ type: activeTab, values });
+
+      message.success("Transaction created successfully!");
+      closeModal();
+    } catch (error) {
+      message.error("Failed to create transaction.");
+      console.error("Error in submission:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Called on modal submission when updating an existing transaction
+  const handleUpdate = async () => {
+    if (!selectedTransaction) return;
+    setLoading(true);
+    try {
+      let values;
+      if (activeTab === "expense") {
+        values = await expenseForm.validateFields();
+      } else if (activeTab === "transfer") {
+        values = await transferForm.validateFields();
+      } else if (activeTab === "income") {
+        values = await incomeForm.validateFields();
+      }
+      const transactionData = prepareTransactionData(values, activeTab);
+      const transactionRef = doc(
+        db,
+        "users",
+        user.uid,
+        "transactions",
+        selectedTransaction.id
+      );
+      const transactionSnap = await getDoc(transactionRef);
+      if (!transactionSnap.exists()) {
+        message.error("Transaction not found.");
+        return;
+      }
+      const prevTransaction = transactionSnap.data();
+
+      // Reverse previous account–balance changes
+      if (
+        prevTransaction.type === "Income" ||
+        prevTransaction.type === "Expense"
+      ) {
+        const accountQuery = query(
+          collection(db, "users", user.uid, "transactions"),
+          where(
+            "transMode",
+            "==",
+            prevTransaction.mode || prevTransaction.toAccount
+          ),
+          where("page", "==", "newAccount")
+        );
+        const accountSnapshot = await getDocs(accountQuery);
+        if (!accountSnapshot.empty) {
+          const accountDoc = accountSnapshot.docs[0];
+          let updatedAmount = accountDoc.data().amount || 0;
+          if (prevTransaction.type === "Income") {
+            updatedAmount -= prevTransaction.amount;
+          } else if (prevTransaction.type === "Expense") {
+            updatedAmount += prevTransaction.amount;
+          }
+          // Apply the new amount changes
+          if (transactionData.type === "Income") {
+            updatedAmount += transactionData.amount;
+          } else if (transactionData.type === "Expense") {
+            updatedAmount -= transactionData.amount;
+          }
+          await updateDoc(accountDoc.ref, { amount: updatedAmount });
+        }
+      } else if (prevTransaction.type === "Transfer") {
+        // Reverse the transfer on both accounts
+        const fromQuery = query(
+          collection(db, "users", user.uid, "transactions"),
+          where("transMode", "==", prevTransaction.fromAccount),
+          where("page", "==", "newAccount")
+        );
+        const toQuery = query(
+          collection(db, "users", user.uid, "transactions"),
+          where("transMode", "==", prevTransaction.toAccount),
+          where("page", "==", "newAccount")
+        );
+        const [fromSnap, toSnap] = await Promise.all([
+          getDocs(fromQuery),
+          getDocs(toQuery),
+        ]);
+        if (!fromSnap.empty && !toSnap.empty) {
+          const fromDoc = fromSnap.docs[0];
+          const toDoc = toSnap.docs[0];
+          const fromData = fromDoc.data();
+          const toData = toDoc.data();
+          await updateDoc(fromDoc.ref, {
+            amount: (fromData.amount || 0) + prevTransaction.amount,
+          });
+          await updateDoc(toDoc.ref, {
+            amount: (toData.amount || 0) - prevTransaction.amount,
+          });
+        }
+        // If the updated transaction is still a transfer, apply new changes
+        if (transactionData.type === "Transfer") {
+          const newFromQuery = query(
+            collection(db, "users", user.uid, "transactions"),
+            where("transMode", "==", transactionData.fromAccount),
+            where("page", "==", "newAccount")
+          );
+          const newToQuery = query(
+            collection(db, "users", user.uid, "transactions"),
+            where("transMode", "==", transactionData.toAccount),
+            where("page", "==", "newAccount")
+          );
+          const [newFromSnap, newToSnap] = await Promise.all([
+            getDocs(newFromQuery),
+            getDocs(newToQuery),
+          ]);
+          if (!newFromSnap.empty && !newToSnap.empty) {
+            const newFromDoc = newFromSnap.docs[0];
+            const newToDoc = newToSnap.docs[0];
+            const newFromData = newFromDoc.data();
+            const newToData = newToDoc.data();
+            await updateDoc(newFromDoc.ref, {
+              amount: (newFromData.amount || 0) - transactionData.amount,
+            });
+            await updateDoc(newToDoc.ref, {
+              amount: (newToData.amount || 0) + transactionData.amount,
+            });
+          }
+        }
+      }
+
+      // Update the transaction document in Firestore
+      await updateDoc(transactionRef, transactionData);
+      message.success("Transaction updated successfully!");
+      closeModal();
+    } catch (error) {
+      console.error("Error updating transaction:", error);
+      message.error("Failed to update transaction.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Chooses the proper handler based on mode (add vs. edit)
+  const handleModalOk = async () => {
+    if (isEditing) {
+      await handleUpdate();
+    } else {
+      await handleSubmit();
+    }
+  };
+
+  // Pre-populates the correct form and opens the modal in edit mode
+  const handleEdit = (transaction) => {
+    setSelectedTransaction(transaction);
+    setIsEditing(true);
+
+    if (transaction.type === "Expense") {
+      setActiveTab("expense");
+      expenseForm.setFieldsValue({
+        title: transaction.title,
+        category: transaction.category,
+        date: transaction.date ? moment(transaction.date.seconds * 1000) : null,
+        amount: transaction.amount,
+        mode: transaction.mode,
+        comments: transaction.comments,
+      });
+      transferForm.resetFields();
+      incomeForm.resetFields();
+    } else if (transaction.type === "Transfer") {
+      setActiveTab("transfer");
+      transferForm.setFieldsValue({
+        fromAccount: transaction.fromAccount,
+        toAccount: transaction.toAccount,
+        date: transaction.date ? moment(transaction.date.seconds * 1000) : null,
+        amount: transaction.amount,
+        comments: transaction.comments,
+      });
+      expenseForm.resetFields();
+      incomeForm.resetFields();
+    } else if (transaction.type === "Income") {
+      setActiveTab("income");
+      incomeForm.setFieldsValue({
+        toAccount: transaction.mode || transaction.toAccount,
+        category: transaction.category,
+        date: transaction.date ? moment(transaction.date.seconds * 1000) : null,
+        amount: transaction.amount,
+        comments: transaction.comments,
+      });
+      expenseForm.resetFields();
+      transferForm.resetFields();
+    }
+    setOpen(true);
+  };
+
+  // Resets state and closes the modal
+  const closeModal = () => {
+    setOpen(false);
+    setIsEditing(false);
+    setSelectedTransaction(null);
+    expenseForm.resetFields();
+    transferForm.resetFields();
+    incomeForm.resetFields();
+  };
+
+  // Delete logic remains similar to your original implementation
+  const showDeleteConfirm = () => {
+    Modal.confirm({
+      title: "Are you sure you want to delete the selected transaction(s)?",
+      icon: <ExclamationCircleFilled />,
+      okText: "Yes",
+      okType: "danger",
+      cancelText: "No",
+      onOk: async () => {
+        try {
+          const transactionsToDelete = await Promise.all(
+            selected.map(async (id) => {
+              const docRef = doc(db, "users", user.uid, "transactions", id);
+              const docSnap = await getDoc(docRef);
+              return { id, ...docSnap.data() };
+            })
+          );
+
+          await Promise.all(
+            transactionsToDelete.map(async (transaction) => {
+              // Update the related account balances (similar to your existing logic)
+              const accountQuery = query(
+                collection(db, "users", user.uid, "transactions"),
+                where(
+                  "transMode",
+                  "==",
+                  transaction.mode || transaction.toAccount
+                ),
+                where("page", "==", "newAccount")
+              );
+
+              const querySnapshot = await getDocs(accountQuery);
+              if (!querySnapshot.empty) {
+                const accountDoc = querySnapshot.docs[0];
+                const accountData = accountDoc.data();
+                let updatedAmount = accountData.amount || 0;
+
+                if (transaction.type === "Income") {
+                  updatedAmount -= transaction.amount;
+                } else if (transaction.type === "Expense") {
+                  updatedAmount += transaction.amount;
+                } else if (transaction.type === "Transfer") {
+                  const fromQuery = query(
+                    collection(db, "users", user.uid, "transactions"),
+                    where("transMode", "==", transaction.fromAccount),
+                    where("page", "==", "newAccount")
+                  );
+                  const fromSnapshot = await getDocs(fromQuery);
+                  if (!fromSnapshot.empty) {
+                    const fromDoc = fromSnapshot.docs[0];
+                    await updateDoc(fromDoc.ref, {
+                      amount: (fromDoc.data().amount || 0) + transaction.amount,
+                    });
+                  }
+                  const toQuery = query(
+                    collection(db, "users", user.uid, "transactions"),
+                    where("transMode", "==", transaction.toAccount),
+                    where("page", "==", "newAccount")
+                  );
+                  const toSnapshot = await getDocs(toQuery);
+                  if (!toSnapshot.empty) {
+                    const toDoc = toSnapshot.docs[0];
+                    await updateDoc(toDoc.ref, {
+                      amount: (toDoc.data().amount || 0) - transaction.amount,
+                    });
+                  }
+                }
+                await updateDoc(accountDoc.ref, { amount: updatedAmount });
+              }
+              await deleteDoc(
+                doc(db, "users", user.uid, "transactions", transaction.id)
+              );
+            })
+          );
+
+          message.info("Transaction(s) deleted successfully!");
+          setSelected([]);
+        } catch (error) {
+          console.error("Error deleting transaction(s):", error);
+          message.error("Failed to delete transaction(s).");
+        }
+      },
+    });
+  };
 
   return (
     <Toolbar
@@ -414,103 +570,6 @@ function EnhancedTableToolbar(props) {
             </span>
           </Tooltip>
 
-          <Modal
-            open={openEdit}
-            title="Edit Transaction"
-            okText="Update"
-            cancelText="Cancel"
-            destroyOnClose
-            onCancel={() => setOpenEdit(false)}
-            onOk={() => editForm.submit()}
-            confirmLoading={loading}
-            okButtonProps={{ disabled: loading }}
-          >
-            <Form
-              layout="vertical"
-              form={editForm}
-              name="edit_form_modal"
-              onFinish={onUpdate}
-            >
-              <Form.Item
-                name="title"
-                label="Title"
-                style={{ flex: 1 }}
-                rules={[{ required: true }]}
-              >
-                <Input />
-              </Form.Item>
-              <div style={{ display: "flex", gap: "16px" }}>
-                <Form.Item
-                  // rules={[{ required: true }]}
-                  name="category"
-                  label="Category"
-                  style={{ flex: 1 }}
-                >
-                  <Select>
-                    <Select.Option value="Housing">Housing</Select.Option>
-                    <Select.Option value="Food">Food</Select.Option>
-                    <Select.Option value="Transportation">
-                      Transportation
-                    </Select.Option>
-                    <Select.Option value="Health">Health</Select.Option>
-                    <Select.Option value="Kids">Kids</Select.Option>
-                    <Select.Option value="Personal Care">
-                      Personal Care
-                    </Select.Option>
-                    <Select.Option value="Clothing">Clothing</Select.Option>
-                    <Select.Option value="Gifths">Gifts</Select.Option>
-                    <Select.Option value="Savings">Savings</Select.Option>
-                    <Select.Option value="Debts Payments">
-                      Debts Payments
-                    </Select.Option>
-                  </Select>
-                </Form.Item>
-                <Form.Item
-                  rules={[{ required: true }]}
-                  name="mode"
-                  label="Mode"
-                  style={{ flex: 1 }}
-                >
-                  <Select>
-                    {options.map((option) => (
-                      <Select.Option key={option} value={option}>
-                        {option}
-                      </Select.Option>
-                    ))}
-                  </Select>
-                </Form.Item>
-              </div>
-              <div style={{ display: "flex", gap: "16px" }}>
-                <Form.Item
-                  rules={[{ required: true }]}
-                  name="date"
-                  label="Select Date"
-                  style={{ width: "100%" }}
-                >
-                  <DatePicker style={{ width: "100%" }} />
-                </Form.Item>
-                <Form.Item
-                  rules={[{ required: true }]}
-                  name="amount"
-                  label="Amount"
-                  style={{ width: "100%" }}
-                >
-                  <InputNumber style={{ width: "100%" }} />
-                </Form.Item>
-              </div>
-              <div>
-                <Form.Item
-                  name="comments"
-                  // rules={[{ required: true }]}
-                  label="Comments"
-                >
-                  <TextArea rows={2} />
-                </Form.Item>
-              </div>
-            </Form>
-          </Modal>
-
-          {/* <EditForm selectedTransaction={selectedTransaction} /> */}
           <Tooltip title="Delete">
             <IconButton onClick={showDeleteConfirm}>
               <DeleteIcon />
@@ -519,7 +578,16 @@ function EnhancedTableToolbar(props) {
         </>
       ) : (
         <Tooltip title="Add Expense">
-          <IconButton onClick={() => setOpen(true)}>
+          <IconButton
+            onClick={() => {
+              setOpen(true);
+              setIsEditing(false);
+              setSelectedTransaction(null);
+              expenseForm.resetFields();
+              transferForm.resetFields();
+              incomeForm.resetFields();
+            }}
+          >
             <AddBoxIcon />
           </IconButton>
         </Tooltip>
@@ -527,12 +595,12 @@ function EnhancedTableToolbar(props) {
 
       <Modal
         open={open}
-        title="New Transaction"
-        okText="Create"
+        title={isEditing ? "Edit Transaction" : "New Transaction"}
+        okText={isEditing ? "Update" : "Create"}
         cancelText="Cancel"
-        onCancel={() => setOpen(false)}
-        onOk={handleSubmit}
         destroyOnClose
+        onCancel={closeModal}
+        onOk={handleModalOk}
         confirmLoading={loading}
         okButtonProps={{ disabled: loading }}
       >
@@ -543,7 +611,6 @@ function EnhancedTableToolbar(props) {
                 name="title"
                 label="Title"
                 rules={[{ required: true }]}
-                style={{ flex: 1 }}
               >
                 <Input />
               </Form.Item>
@@ -573,7 +640,6 @@ function EnhancedTableToolbar(props) {
                     </Select.Option>
                   </Select>
                 </Form.Item>
-
                 <Form.Item
                   name="mode"
                   label="Mode"

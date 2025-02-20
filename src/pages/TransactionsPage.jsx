@@ -300,11 +300,93 @@ function EnhancedTableToolbar(props) {
         });
         await updateDoc(toDoc.ref, { amount: (toData.amount || 0) + amount });
       } else {
-        console.warn("⚠️ One or both accounts not found!");
+        console.warn("One or both accounts not found!");
       }
     } catch (error) {
-      console.error("❌ Error processing transfer:", error);
+      console.error("Error processing transfer:", error);
     }
+  };
+
+  const showDeleteConfirm = () => {
+    Modal.confirm({
+      title: "Are you sure you want to delete the selected transaction(s)?",
+      icon: <ExclamationCircleFilled />,
+      okText: "Yes",
+      okType: "danger",
+      cancelText: "No",
+      onOk: async () => {
+        try {
+          const transactionsToDelete = await Promise.all(
+            selected.map(async (id) => {
+              const docRef = doc(db, "users", user.uid, "transactions", id);
+              const docSnap = await getDoc(docRef);
+              return { id, ...docSnap.data() };
+            })
+          );
+
+          await Promise.all(
+            transactionsToDelete.map(async (transaction) => {
+              const accountQuery = query(
+                collection(db, "users", user.uid, "transactions"),
+                where(
+                  "transMode",
+                  "==",
+                  transaction.mode || transaction.toAccount
+                ),
+                where("page", "==", "newAccount")
+              );
+
+              const querySnapshot = await getDocs(accountQuery);
+              if (!querySnapshot.empty) {
+                const accountDoc = querySnapshot.docs[0];
+                const accountData = accountDoc.data();
+                let updatedAmount = accountData.amount || 0;
+
+                if (transaction.type === "Income") {
+                  updatedAmount -= transaction.amount;
+                } else if (transaction.type === "Expense") {
+                  updatedAmount += transaction.amount;
+                  await updateDoc(accountDoc.ref, { amount: updatedAmount });
+                } else if (transaction.type === "Transfer") {
+                  const fromQuery = query(
+                    collection(db, "users", user.uid, "transactions"),
+                    where("transMode", "==", transaction.fromAccount),
+                    where("page", "==", "newAccount")
+                  );
+                  const fromSnapshot = await getDocs(fromQuery);
+                  if (!fromSnapshot.empty) {
+                    const fromDoc = fromSnapshot.docs[0];
+                    await updateDoc(fromDoc.ref, {
+                      amount: (fromDoc.data().amount || 0) + transaction.amount,
+                    });
+                  }
+                  const toQuery = query(
+                    collection(db, "users", user.uid, "transactions"),
+                    where("transMode", "==", transaction.toAccount),
+                    where("page", "==", "newAccount")
+                  );
+                  const toSnapshot = await getDocs(toQuery);
+                  if (!toSnapshot.empty) {
+                    const toDoc = toSnapshot.docs[0];
+                    await updateDoc(toDoc.ref, {
+                      amount: (toDoc.data().amount || 0) - transaction.amount,
+                    });
+                  }
+                }
+              }
+              await deleteDoc(
+                doc(db, "users", user.uid, "transactions", transaction.id)
+              );
+            })
+          );
+          message.info("Transaction(s) deleted successfully!");
+          setSelected([]);
+        } catch (error) {
+          console.error("Error deleting transaction(s):", error);
+          message.error("Failed to delete transaction(s).");
+        }
+      },
+    });
   };
 
   const handleUpdate = async () => {
@@ -498,91 +580,6 @@ function EnhancedTableToolbar(props) {
     expenseForm.resetFields();
     transferForm.resetFields();
     incomeForm.resetFields();
-  };
-
-  // Delete logic remains similar to your original implementation
-  const showDeleteConfirm = () => {
-    Modal.confirm({
-      title: "Are you sure you want to delete the selected transaction(s)?",
-      icon: <ExclamationCircleFilled />,
-      okText: "Yes",
-      okType: "danger",
-      cancelText: "No",
-      onOk: async () => {
-        try {
-          const transactionsToDelete = await Promise.all(
-            selected.map(async (id) => {
-              const docRef = doc(db, "users", user.uid, "transactions", id);
-              const docSnap = await getDoc(docRef);
-              return { id, ...docSnap.data() };
-            })
-          );
-
-          await Promise.all(
-            transactionsToDelete.map(async (transaction) => {
-              // Update the related account balances (similar to your existing logic)
-              const accountQuery = query(
-                collection(db, "users", user.uid, "transactions"),
-                where(
-                  "transMode",
-                  "==",
-                  transaction.mode || transaction.toAccount
-                ),
-                where("page", "==", "newAccount")
-              );
-
-              const querySnapshot = await getDocs(accountQuery);
-              if (!querySnapshot.empty) {
-                const accountDoc = querySnapshot.docs[0];
-                const accountData = accountDoc.data();
-                let updatedAmount = accountData.amount || 0;
-
-                if (transaction.type === "Income") {
-                  updatedAmount -= transaction.amount;
-                } else if (transaction.type === "Expense") {
-                  updatedAmount += transaction.amount;
-                } else if (transaction.type === "Transfer") {
-                  const fromQuery = query(
-                    collection(db, "users", user.uid, "transactions"),
-                    where("transMode", "==", transaction.fromAccount),
-                    where("page", "==", "newAccount")
-                  );
-                  const fromSnapshot = await getDocs(fromQuery);
-                  if (!fromSnapshot.empty) {
-                    const fromDoc = fromSnapshot.docs[0];
-                    await updateDoc(fromDoc.ref, {
-                      amount: (fromDoc.data().amount || 0) + transaction.amount,
-                    });
-                  }
-                  const toQuery = query(
-                    collection(db, "users", user.uid, "transactions"),
-                    where("transMode", "==", transaction.toAccount),
-                    where("page", "==", "newAccount")
-                  );
-                  const toSnapshot = await getDocs(toQuery);
-                  if (!toSnapshot.empty) {
-                    const toDoc = toSnapshot.docs[0];
-                    await updateDoc(toDoc.ref, {
-                      amount: (toDoc.data().amount || 0) - transaction.amount,
-                    });
-                  }
-                }
-                await updateDoc(accountDoc.ref, { amount: updatedAmount });
-              }
-              await deleteDoc(
-                doc(db, "users", user.uid, "transactions", transaction.id)
-              );
-            })
-          );
-
-          message.info("Transaction(s) deleted successfully!");
-          setSelected([]);
-        } catch (error) {
-          console.error("Error deleting transaction(s):", error);
-          message.error("Failed to delete transaction(s).");
-        }
-      },
-    });
   };
 
   return (

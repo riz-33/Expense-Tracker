@@ -42,15 +42,15 @@ const options = ["Transfer Funds", "Add Money"];
 const getAccountStyle = (mode) => {
   switch (mode) {
     case "Debit Card":
-      return { icon: <CreditCardIcon />, color: green[500] };
+      return { icon: <CreditCardIcon />, color: green[800] };
     case "Credit Card":
-      return { icon: <CreditCardIcon />, color: red[600] };
+      return { icon: <CreditCardIcon />, color: red[800] };
     case "Investment":
-      return { icon: <AttachMoneyIcon />, color: purple[500] };
+      return { icon: <AttachMoneyIcon />, color: purple[800] };
     case "Cash":
-      return { icon: <PaymentsIcon />, color: blue[800] };
+      return { icon: <PaymentsIcon />, color: blue[900] };
     default:
-      return { icon: <PaymentsIcon />, color: blue[800] }; // Default case
+      return { icon: <PaymentsIcon />, color: blue[900] }; // Default case
   }
 };
 
@@ -204,42 +204,42 @@ export const AccountsPage = () => {
                       {icon}
                     </Avatar>
                   }
-                  action={
-                    <>
-                      <IconButton
-                        aria-label="more"
-                        id="long-button"
-                        aria-controls={open ? "long-menu" : undefined}
-                        aria-expanded={open ? "true" : undefined}
-                        aria-haspopup="true"
-                        onClick={handleClick}
-                      >
-                        <MoreVertIcon />
-                      </IconButton>
-                      <Menu
-                        id="long-menu"
-                        MenuListProps={{
-                          "aria-labelledby": "long-button",
-                        }}
-                        anchorEl={anchorEl}
-                        open={open}
-                        onClose={handleClose}
-                        slotProps={{
-                          paper: {
-                            style: {
-                              width: "20ch",
-                            },
-                          },
-                        }}
-                      >
-                        {options.map((option) => (
-                          <MenuItem key={option} onClick={handleClose}>
-                            {option}
-                          </MenuItem>
-                        ))}
-                      </Menu>
-                    </>
-                  }
+                  // action={
+                  //   <>
+                  //     <IconButton
+                  //       aria-label="more"
+                  //       id="long-button"
+                  //       aria-controls={open ? "long-menu" : undefined}
+                  //       aria-expanded={open ? "true" : undefined}
+                  //       aria-haspopup="true"
+                  //       onClick={handleClick}
+                  //     >
+                  //       <MoreVertIcon />
+                  //     </IconButton>
+                  //     <Menu
+                  //       id="long-menu"
+                  //       MenuListProps={{
+                  //         "aria-labelledby": "long-button",
+                  //       }}
+                  //       anchorEl={anchorEl}
+                  //       open={open}
+                  //       onClose={handleClose}
+                  //       slotProps={{
+                  //         paper: {
+                  //           style: {
+                  //             width: "20ch",
+                  //           },
+                  //         },
+                  //       }}
+                  //     >
+                  //       {options.map((option) => (
+                  //         <MenuItem key={option} onClick={handleClose}>
+                  //           {option}
+                  //         </MenuItem>
+                  //       ))}
+                  //     </Menu>
+                  //   </>
+                  // }
                   title={
                     <>
                       <Typography sx={{ fontSize: 20 }}>

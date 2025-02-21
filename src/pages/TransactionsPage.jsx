@@ -344,6 +344,7 @@ function EnhancedTableToolbar(props) {
 
                 if (transaction.type === "Income") {
                   updatedAmount -= transaction.amount;
+                  await updateDoc(accountDoc.ref, { amount: updatedAmount });
                 } else if (transaction.type === "Expense") {
                   updatedAmount += transaction.amount;
                   await updateDoc(accountDoc.ref, { amount: updatedAmount });

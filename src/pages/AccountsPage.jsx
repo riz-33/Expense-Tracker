@@ -130,7 +130,7 @@ export const AccountsPage = () => {
         <Button
           variant="contained"
           onClick={() => setOpenModal(true)}
-          style={{ padding: "2px 12px" }}
+          style={{ padding: "2px 12px", backgroundColor: "#1a237e" }}
         >
           Add Account
         </Button>
@@ -142,7 +142,10 @@ export const AccountsPage = () => {
         cancelText="Cancel"
         onCancel={() => setOpenModal(false)}
         confirmLoading={loading}
-        okButtonProps={{ disabled: loading }}
+        okButtonProps={{
+          disabled: loading,
+          style: { backgroundColor: "#1a237e" },
+        }}
         destroyOnClose
         onOk={() => form.submit()}
       >

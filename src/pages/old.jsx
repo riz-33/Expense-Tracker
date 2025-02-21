@@ -1,3 +1,137 @@
+const handleUpdate = async () => {
+  if (!selectedTransaction) return;
+  setLoading(true);
+  try {
+    let values;
+    if (activeTab === "expense") {
+      values = await expenseForm.validateFields();
+    } else if (activeTab === "transfer") {
+      values = await transferForm.validateFields();
+    } else if (activeTab === "income") {
+      values = await incomeForm.validateFields();
+    }
+    const transactionData = prepareTransactionData(values, activeTab);
+    const transactionRef = doc(
+      db,
+      "users",
+      user.uid,
+      "transactions",
+      selectedTransaction.id
+    );
+    const transactionSnap = await getDoc(transactionRef);
+    if (!transactionSnap.exists()) {
+      message.error("Transaction not found.");
+      return;
+    }
+    const prevTransaction = transactionSnap.data();
+    console.log(prevTransaction.mode);
+    // Reverse previous account–balance changes
+    if (
+      prevTransaction.type === "Income" ||
+      prevTransaction.type === "Expense"
+    ) {
+      const accountQuery = query(
+        collection(db, "users", user.uid, "transactions"),
+        where(
+          "transMode",
+          "==",
+          prevTransaction.mode || prevTransaction.toAccount
+        ),
+        where("page", "==", "newAccount")
+      );
+      const accountSnapshot = await getDocs(accountQuery);
+      if (!accountSnapshot.empty) {
+        const accountDoc = accountSnapshot.docs[0];
+        console.log(accountDoc.data().amount);
+        let updatedAmount = accountDoc.data().amount || 0;
+        if (prevTransaction.type === "Income") {
+          updatedAmount -= prevTransaction.amount;
+        } else if (prevTransaction.type === "Expense") {
+          updatedAmount += prevTransaction.amount;
+        }
+        // Apply the new amount changes
+        console.log(transactionData);
+        if (transactionData.type === "Income") {
+          updatedAmount += transactionData.amount;
+        } else if (transactionData.type === "Expense") {
+          updatedAmount -= transactionData.amount;
+        }
+        await updateDoc(accountDoc.ref, { amount: updatedAmount });
+      }
+    } else if (prevTransaction.type === "Transfer") {
+      // Reverse the transfer on both accounts
+      const fromQuery = query(
+        collection(db, "users", user.uid, "transactions"),
+        where("transMode", "==", prevTransaction.fromAccount),
+        where("page", "==", "newAccount")
+      );
+      const toQuery = query(
+        collection(db, "users", user.uid, "transactions"),
+        where("transMode", "==", prevTransaction.toAccount),
+        where("page", "==", "newAccount")
+      );
+      const [fromSnap, toSnap] = await Promise.all([
+        getDocs(fromQuery),
+        getDocs(toQuery),
+      ]);
+      if (!fromSnap.empty && !toSnap.empty) {
+        const fromDoc = fromSnap.docs[0];
+        const toDoc = toSnap.docs[0];
+        const fromData = fromDoc.data();
+        const toData = toDoc.data();
+        await updateDoc(fromDoc.ref, {
+          amount: (fromData.amount || 0) + prevTransaction.amount,
+        });
+        await updateDoc(toDoc.ref, {
+          amount: (toData.amount || 0) - prevTransaction.amount,
+        });
+      }
+      // If the updated transaction is still a transfer, apply new changes
+      if (transactionData.type === "Transfer") {
+        const newFromQuery = query(
+          collection(db, "users", user.uid, "transactions"),
+          where("transMode", "==", transactionData.fromAccount),
+          where("page", "==", "newAccount")
+        );
+        const newToQuery = query(
+          collection(db, "users", user.uid, "transactions"),
+          where("transMode", "==", transactionData.toAccount),
+          where("page", "==", "newAccount")
+        );
+        const [newFromSnap, newToSnap] = await Promise.all([
+          getDocs(newFromQuery),
+          getDocs(newToQuery),
+        ]);
+        if (!newFromSnap.empty && !newToSnap.empty) {
+          const newFromDoc = newFromSnap.docs[0];
+          const newToDoc = newToSnap.docs[0];
+          const newFromData = newFromDoc.data();
+          const newToData = newToDoc.data();
+          await updateDoc(newFromDoc.ref, {
+            amount: (newFromData.amount || 0) - transactionData.amount,
+          });
+          await updateDoc(newToDoc.ref, {
+            amount: (newToData.amount || 0) + transactionData.amount,
+          });
+        }
+      }
+    }
+
+    // Update the transaction document in Firestore
+    await updateDoc(transactionRef, transactionData);
+    message.success("Transaction updated successfully!");
+    closeModal();
+  } catch (error) {
+    console.error("Error updating transaction:", error);
+    message.error("Failed to update transaction.");
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+
+
 const handleAddTransaction = async (values) => {
     console.log("Transaction values:", values);
     try {

@@ -69,6 +69,7 @@ const DrawerHeader = styled("div")(({ theme }) => ({
 }));
 
 const AppBar = styled(MuiAppBar)(({ theme }) => ({
+  backgroundColor: "#1a237e",
   zIndex: theme.zIndex.drawer + 1,
 }));
 
@@ -144,7 +145,7 @@ function SideDrawer({ children }) {
                 aria-haspopup="true"
                 onClick={handleMenu}
                 color="inherit"
-                variant='square'
+                variant="square"
               >
                 <AccountCircle />
               </IconButton>
@@ -164,8 +165,22 @@ function SideDrawer({ children }) {
               open={Boolean(anchorEl)}
               onClose={handleClose}
             >
-              <MenuItem onClick={() => { navigate('/profile'); handleClose(); }} >Profile</MenuItem>
-              <MenuItem onClick={() => { handleClose(); logOut(); }}>Logout</MenuItem>
+              <MenuItem
+                onClick={() => {
+                  navigate("/profile");
+                  handleClose();
+                }}
+              >
+                Profile
+              </MenuItem>
+              <MenuItem
+                onClick={() => {
+                  handleClose();
+                  logOut();
+                }}
+              >
+                Logout
+              </MenuItem>
             </Menu>
           </Box>
         </Toolbar>

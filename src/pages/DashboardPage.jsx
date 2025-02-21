@@ -208,7 +208,7 @@ export const DashboardPage = () => {
               sx={{
                 ":hover": {
                   boxShadow: 15, // theme.shadows[20]
-                  backgroundColor: "#1976d2",
+                  backgroundColor: "#1a237e",
                   color: "white",
                   // color:"text.primary",
                 },
@@ -241,7 +241,7 @@ export const DashboardPage = () => {
               sx={{
                 ":hover": {
                   boxShadow: 15, // theme.shadows[20]
-                  backgroundColor: "#1976d2",
+                  backgroundColor: "#1a237e",
                   color: "white",
                   // color:"text.primary",
                 },
@@ -274,7 +274,7 @@ export const DashboardPage = () => {
               sx={{
                 ":hover": {
                   boxShadow: 15, // theme.shadows[20]
-                  backgroundColor: "#1976d2",
+                  backgroundColor: "#1a237e",
                   color: "white",
                   // color:"text.primary",
                 },
@@ -307,7 +307,7 @@ export const DashboardPage = () => {
               sx={{
                 ":hover": {
                   boxShadow: 15, // theme.shadows[20]
-                  backgroundColor: "#1976d2",
+                  backgroundColor: "#1a237e",
                   color: "white",
                   // color:"text.primary",
                 },

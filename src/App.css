@@ -8,3 +8,6 @@
   font-family: "Poppins", serif !important;
 }
 
+.ant-upload-wrapper{
+  justify-items: center;
+}

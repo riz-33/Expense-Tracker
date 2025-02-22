@@ -1,4 +1,3 @@
-import { UserOutlined } from "@ant-design/icons";
 import {
   Button,
   Card,
@@ -12,27 +11,111 @@ import {
   message,
   Avatar,
   Space,
+  Upload,
 } from "antd";
 import User from "../context/user";
+import { UserOutlined } from "@ant-design/icons";
 import { useContext, useEffect, useState } from "react";
-import { doc, getDoc, db, updateDoc } from "../config/firebase";
+import { doc, db, updateDoc, onSnapshot } from "../config/firebase";
 
 const ProfilePage = () => {
-  const { Option } = Select;
   const user = useContext(User).user;
+  const { Option } = Select;
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
+  const [avatarUrl, setAvatarUrl] = useState(user?.avatar || "");
+
+  const compressImage = (file) => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target.result;
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          const ctx = canvas.getContext("2d");
+
+          const maxWidth = 800; // Set maximum width
+          const maxHeight = 800; // Set maximum height
+          let width = img.width;
+          let height = img.height;
+
+          // Resize logic
+          if (width > maxWidth || height > maxHeight) {
+            if (width > height) {
+              height *= maxWidth / width;
+              width = maxWidth;
+            } else {
+              width *= maxHeight / height;
+              height = maxHeight;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          ctx.drawImage(img, 0, 0, width, height);
+
+          canvas.toBlob(
+            (blob) => {
+              resolve(
+                new File([blob], file.name, {
+                  type: "image/jpeg",
+                  lastModified: Date.now(),
+                })
+              );
+            },
+            "image/jpeg",
+            0.7
+          ); // Compression quality (0.7 reduces size)
+        };
+      };
+    });
+  };
+
+  const props = {
+    name: "file",
+    async beforeUpload(file) {
+      return await compressImage(file); // Compress before upload
+    },
+    action: "https://api.cloudinary.com/v1_1/dxzqtndlo/image/upload",
+    data: (file) => ({
+      upload_preset: "expense_tracker",
+      file,
+    }),
+
+    async onChange(info) {
+      if (info.file.status !== "uploading") {
+        console.log(info.file, info.fileList);
+      }
+      if (info.file.status === "done") {
+        const url = info.file.response.secure_url;
+        const fileRef = doc(db, "users", user.uid);
+
+        await updateDoc(fileRef, { avatar: url });
+        setAvatarUrl(url);
+
+        message.success(`File uploaded successfully`);
+      } else if (info.file.status === "error") {
+        message.error(`File upload failed.`);
+      }
+    },
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      const docRef = doc(db, "users", user.uid);
-      const docSnap = await getDoc(docRef);
-    };
-    fetchData();
-  }, [user.uid]);
+    const docRef = doc(db, "users", user.uid);
+    const unsubscribe = onSnapshot(docRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const userData = docSnap.data();
+        form.setFieldsValue(userData);
+        setAvatarUrl(userData.avatar);
+      }
+    });
+    return () => unsubscribe();
+  }, [user.uid, form]);
 
   const onFinish = async (values) => {
-    setLoading(true); // Start loading
+    setLoading(true);
     const userRef = doc(db, "users", user.uid);
     try {
       await updateDoc(userRef, {
@@ -60,26 +143,6 @@ const ProfilePage = () => {
             User Profile
           </Typography>
 
-          <Space
-            style={{
-              display: "flex",
-              alignItems: "center",
-              padding: 5,
-              marginBottom: 15,
-              cursor:"pointer",
-            }}
-            direction="vertical"
-            size={16}
-          >
-            <Avatar
-              // src={
-              //   "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/1200px-Google_%22G%22_logo.svg.png"
-              // }
-              size={150}
-              icon={<UserOutlined />}
-            />
-          </Space>
-
           <Form
             form={form}
             name="register"
@@ -87,57 +150,85 @@ const ProfilePage = () => {
             layout="vertical"
             scrollToFirstError
           >
-            <div style={{ display: "flex", gap: "16px" }}>
-              <Form.Item
-                style={{ width: "100%" }}
-                name="username"
-                label="Username"
-                initialValue={user.username}
-              >
-                <Input />
-              </Form.Item>
-
-              <Form.Item
-                style={{ width: "100%" }}
-                initialValue={user.email}
-                name="email"
-                label="E-mail"
-                rules={[
-                  {
-                    type: "email",
-                  },
-                ]}
-              >
-                <Input />
-              </Form.Item>
+            <div
+              style={{
+                padding: 5,
+                marginBottom: 15,
+                cursor: "pointer",
+                display: "flex",
+                justifyContent: "center",
+              }}
+            >
+              <Upload style={{ justifyContent: "center" }} {...props}>
+                <Space
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                  direction="vertical"
+                  size={16}
+                >
+                  <Avatar src={avatarUrl} size={150} icon={<UserOutlined />} />
+                </Space>
+              </Upload>
             </div>
 
-            <div style={{ display: "flex", gap: "16px" }}>
-              <Form.Item
-                style={{ width: "100%" }}
-                initialValue={user.number}
-                name="number"
-                label="Phone Number"
-              >
-                <Input />
-              </Form.Item>
+            <div style={{ marginTop: 15 }}>
+              <div style={{ display: "flex", gap: "16px" }}>
+                <Form.Item
+                  style={{ width: "100%" }}
+                  name="username"
+                  label="Username"
+                  initialValue={user.username}
+                >
+                  <Input />
+                </Form.Item>
 
-              <Form.Item
-                style={{ width: "100%" }}
-                initialValue={user.currency}
-                name="currency"
-                label="Currency"
-              >
-                <Select placeholder="select your currency">
-                  <Option value="PKR">PKR &nbsp; &nbsp; Pakistani Rupee</Option>
-                  <Option value="USD">USD &nbsp; &nbsp; US Dollar</Option>
-                  <Option value="EUR">EUR &nbsp; &nbsp; Euro</Option>
-                  <Option value="GBP">GBP &nbsp; &nbsp; Pound Sterling</Option>
-                  <Option value="SAR">SAR &nbsp; &nbsp; Saudi Riyal </Option>
-                </Select>
-              </Form.Item>
+                <Form.Item
+                  style={{ width: "100%" }}
+                  initialValue={user.email}
+                  name="email"
+                  label="E-mail"
+                  rules={[
+                    {
+                      type: "email",
+                    },
+                  ]}
+                >
+                  <Input />
+                </Form.Item>
+              </div>
+
+              <div style={{ display: "flex", gap: "16px" }}>
+                <Form.Item
+                  style={{ width: "100%" }}
+                  initialValue={user.number}
+                  name="number"
+                  label="Phone Number"
+                >
+                  <Input />
+                </Form.Item>
+
+                <Form.Item
+                  style={{ width: "100%" }}
+                  initialValue={user.currency}
+                  name="currency"
+                  label="Currency"
+                >
+                  <Select placeholder="select your currency">
+                    <Option value="PKR">
+                      PKR &nbsp; &nbsp; Pakistani Rupee
+                    </Option>
+                    <Option value="USD">USD &nbsp; &nbsp; US Dollar</Option>
+                    <Option value="EUR">EUR &nbsp; &nbsp; Euro</Option>
+                    <Option value="GBP">
+                      GBP &nbsp; &nbsp; Pound Sterling
+                    </Option>
+                    <Option value="SAR">SAR &nbsp; &nbsp; Saudi Riyal </Option>
+                  </Select>
+                </Form.Item>
+              </div>
             </div>
-
             <Form.Item
               style={{ display: "flex", justifyContent: "center", margin: 12 }}
             >

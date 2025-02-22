@@ -9,6 +9,19 @@ import {
   Select,
   Typography,
 } from "antd";
+import User from "../context/user";
+import { useContext, useEffect, useState } from "react";
+import {
+  doc,
+  getDoc,
+  collection,
+  db,
+  query,
+  orderBy,
+  onSnapshot,
+  updateDoc,
+} from "../config/firebase";
+
 const { Option } = Select;
 
 const formItemLayout = {
@@ -42,13 +55,38 @@ const tailFormItemLayout = {
   },
 };
 const ProfilePage = () => {
+  const user = useContext(User).user;
+  useEffect(() => {
+    const fetchData = async () => {
+      const docRef = doc(db, "users", user.uid);
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        console.log("Document data:", docSnap.data());
+      } else {
+        // docSnap.data() will be undefined in this case
+        console.log("No such document!");
+      }
+    };
+    fetchData();
+  }, [user.uid]);
+
   const [form] = Form.useForm();
-  const onFinish = (values) => {
+
+  const onFinish = async (values) => {
+    const userRef = doc(db, "users", user.uid);
+    await updateDoc(userRef, {
+      username: values.username,
+      email: values.email,
+      number: values.number,
+      currency: values.currency,
+    });
     console.log("Received values of form: ", values);
   };
   return (
-    <Row style={{ marginTop: "28px" }}>
-      <Col span={12} offset={6}>
+    <Row style={{ marginTop: "60px" }}>
+      <Col xs={2} sm={4} md={4} lg={5} xl={6}></Col>
+      <Col xs={20} sm={16} md={16} lg={14} xl={12}>
         <Card>
           <Typography
             style={{ fontSize: 20, textAlign: "center", marginBottom: 10 }}
@@ -61,10 +99,6 @@ const ProfilePage = () => {
             form={form}
             name="register"
             onFinish={onFinish}
-            initialValues={{
-              residence: ["zhejiang", "hangzhou", "xihu"],
-              prefix: "86",
-            }}
             style={{
               paddingBlock: 20,
             }}
@@ -80,7 +114,7 @@ const ProfilePage = () => {
                 },
               ]}
             >
-              <Input />
+              <Input defaultValue={user.username} />
             </Form.Item>
 
             <Form.Item
@@ -97,11 +131,11 @@ const ProfilePage = () => {
                 },
               ]}
             >
-              <Input />
+              <Input defaultValue={user.email} />
             </Form.Item>
 
             <Form.Item
-              name="phone"
+              name="number"
               label="Phone Number"
               rules={[
                 {
@@ -110,7 +144,7 @@ const ProfilePage = () => {
                 },
               ]}
             >
-              <Input />
+              <Input defaultValue={user.number} />
             </Form.Item>
 
             <Form.Item
@@ -123,18 +157,25 @@ const ProfilePage = () => {
                 },
               ]}
             >
-              <Select placeholder="select your currency">
-                <Option value="pkr">PKR &nbsp; &nbsp; Pakistani Rupee</Option>
-                <Option value="usd">USD &nbsp; &nbsp; US Dollar</Option>
-                <Option value="eur">EUR &nbsp; &nbsp; Euro</Option>
-                <Option value="gbp">GBP &nbsp; &nbsp; Pound Sterling</Option>
-                <Option value="sar">SAR &nbsp; &nbsp; Saudi Riyal </Option>
+              <Select
+                placeholder="select your currency"
+                defaultValue={user.currency}
+              >
+                <Option value="PKR">PKR &nbsp; &nbsp; Pakistani Rupee</Option>
+                <Option value="USD">USD &nbsp; &nbsp; US Dollar</Option>
+                <Option value="EUR">EUR &nbsp; &nbsp; Euro</Option>
+                <Option value="GBP">GBP &nbsp; &nbsp; Pound Sterling</Option>
+                <Option value="SAR">SAR &nbsp; &nbsp; Saudi Riyal </Option>
               </Select>
             </Form.Item>
 
             <Form.Item {...tailFormItemLayout}>
               <Flex gap="small">
-                <Button type="primary" htmlType="submit">
+                <Button
+                  style={{ backgroundColor: "#1a237e" }}
+                  type="primary"
+                  htmlType="submit"
+                >
                   Submit
                 </Button>
                 <Button danger onClick={() => form.resetFields()}>
@@ -145,6 +186,7 @@ const ProfilePage = () => {
           </Form>
         </Card>
       </Col>
+      <Col xs={2} sm={4} md={4} lg={5} xl={6}></Col>
     </Row>
   );
 };

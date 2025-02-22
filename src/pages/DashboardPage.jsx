@@ -222,7 +222,7 @@ export const DashboardPage = () => {
                   Total Balance
                 </Typography>
                 <Typography variant="h5" component="div">
-                  {user?.currency}{" "}
+                {user?.currency + "."}{" "}
                   {new Intl.NumberFormat("en-IN").format(
                     totalIncome - totalExpense
                   )}
@@ -255,7 +255,7 @@ export const DashboardPage = () => {
                   Total Income
                 </Typography>
                 <Typography variant="h5" component="div">
-                  {user?.currency}{" "}
+                {user?.currency + "."}{" "}
                   {new Intl.NumberFormat("en-IN").format(
                     totalIncome ? totalIncome : 0
                   )}
@@ -288,7 +288,7 @@ export const DashboardPage = () => {
                   Total Expense
                 </Typography>
                 <Typography variant="h5" component="div">
-                  {user?.currency}{" "}
+                {user?.currency + "."}{" "}
                   {new Intl.NumberFormat("en-IN").format(
                     totalExpense ? totalExpense : 0
                   )}

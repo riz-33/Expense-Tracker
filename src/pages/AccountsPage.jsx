@@ -251,7 +251,7 @@ export const AccountsPage = () => {
                           account.title.toUpperCase()}
                       </Typography>
                       <Typography variant="h6" component="div">
-                        {user.currency + "."}{" "}
+                      {user?.currency + "."}{" "}
                         {new Intl.NumberFormat("en-IN").format(account.amount)}
                       </Typography>
                     </>

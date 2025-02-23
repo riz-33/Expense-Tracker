@@ -38,8 +38,8 @@ const LoginForm = () => {
 
   return (
     <Row>
-      <Col xs={2} sm={4} md={6} lg={8} xl={8}></Col>
-      <Col xs={20} sm={16} md={12} lg={8} xl={8} style={{ marginTop: 120 }}>
+      <Col xs={2} sm={4} md={6} xl={8}></Col>
+      <Col xs={20} sm={16} md={12} xl={8} style={{ marginTop: 120 }}>
         <Card>
           <Title underline level={2} style={{ textAlign: "center" }}>
             Login
@@ -71,8 +71,9 @@ const LoginForm = () => {
               />
             </Form.Item>
 
-            <Form.Item label={null}>
+            <Form.Item style={{textAlign:"center"}} label={null}>
               <Button
+                style={{ backgroundColor: "#1a237e", marginBottom:10, color:"white" }}
                 block
                 type="primary"
                 htmlType="submit"
@@ -86,7 +87,7 @@ const LoginForm = () => {
           </Form>
         </Card>
       </Col>
-      <Col xs={2} sm={4} md={6} lg={8} xl={8}></Col>
+      <Col xs={2} sm={4} md={6} xl={8}></Col>
     </Row>
   );
 };

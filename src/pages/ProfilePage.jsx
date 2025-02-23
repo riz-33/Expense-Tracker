@@ -36,8 +36,8 @@ const ProfilePage = () => {
           const canvas = document.createElement("canvas");
           const ctx = canvas.getContext("2d");
 
-          const maxWidth = 800; // Set maximum width
-          const maxHeight = 800; // Set maximum height
+          const maxWidth = 800;
+          const maxHeight = 800;
           let width = img.width;
           let height = img.height;
 
@@ -66,8 +66,8 @@ const ProfilePage = () => {
               );
             },
             "image/jpeg",
-            0.7
-          ); // Compression quality (0.7 reduces size)
+            1
+          );
         };
       };
     });
@@ -76,7 +76,7 @@ const ProfilePage = () => {
   const props = {
     name: "file",
     async beforeUpload(file) {
-      return await compressImage(file); // Compress before upload
+      return await compressImage(file);
     },
     action: "https://api.cloudinary.com/v1_1/dxzqtndlo/image/upload",
     data: (file) => ({
@@ -95,9 +95,9 @@ const ProfilePage = () => {
         await updateDoc(fileRef, { avatar: url });
         setAvatarUrl(url);
 
-        message.success(`File uploaded successfully`);
+        message.success(`Profile picture updated successfully`);
       } else if (info.file.status === "error") {
-        message.error(`File upload failed.`);
+        message.error(`Failed to update profile.`);
       }
     },
   };
@@ -173,19 +173,20 @@ const ProfilePage = () => {
               </Upload>
             </div>
 
-            <div style={{ marginTop: 15 }}>
-              <div style={{ display: "flex", gap: "16px" }}>
+            <Row>
+              <Col style={{ padding: 3 }} xs={24} sm={16} md={12}>
                 <Form.Item
-                  style={{ width: "100%" }}
+                  // style={{ width: "90%" }}
                   name="username"
                   label="Username"
                   initialValue={user.username}
                 >
                   <Input />
                 </Form.Item>
-
+              </Col>
+              <Col style={{ padding: 3 }} xs={24} sm={16} md={12}>
                 <Form.Item
-                  style={{ width: "100%" }}
+                  // style={{ width: "100%" }}
                   initialValue={user.email}
                   name="email"
                   label="E-mail"
@@ -197,18 +198,19 @@ const ProfilePage = () => {
                 >
                   <Input />
                 </Form.Item>
-              </div>
+              </Col>
 
-              <div style={{ display: "flex", gap: "16px" }}>
+              <Col style={{ padding: 3 }} xs={24} sm={16} md={12}>
                 <Form.Item
-                  style={{ width: "100%" }}
+                  // style={{ width: "100%" }}
                   initialValue={user.number}
                   name="number"
                   label="Phone Number"
                 >
                   <Input />
                 </Form.Item>
-
+              </Col>
+              <Col style={{ padding: 3 }} xs={24} sm={16} md={12}>
                 <Form.Item
                   style={{ width: "100%" }}
                   initialValue={user.currency}
@@ -227,8 +229,9 @@ const ProfilePage = () => {
                     <Option value="SAR">SAR &nbsp; &nbsp; Saudi Riyal </Option>
                   </Select>
                 </Form.Item>
-              </div>
-            </div>
+              </Col>
+            </Row>
+
             <Form.Item
               style={{ display: "flex", justifyContent: "center", margin: 12 }}
             >
@@ -240,7 +243,7 @@ const ProfilePage = () => {
                   type="primary"
                   htmlType="submit"
                 >
-                  Submit
+                  Update
                 </Button>
                 <Button danger onClick={() => form.resetFields()}>
                   Reset

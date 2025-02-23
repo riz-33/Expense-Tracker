@@ -97,7 +97,7 @@ export const DashboardPage = () => {
             transactionTime <= lastDay &&
             data.type === "Expense"
           ) {
-            const category = data.category || "Other"; // Default to "Other" if category is missing
+            const category = data.category || "Other";
 
             if (!categoryData[category]) {
               categoryData[category] = 0;
@@ -108,7 +108,7 @@ export const DashboardPage = () => {
 
           if (data.type === "Expense" && transactionTime) {
             const date = new Date(transactionTime * 1000);
-            const monthKey = `${date.getFullYear()}-${date.getMonth() + 1}`; // "YYYY-M"
+            const monthKey = `${date.getFullYear()}-${date.getMonth() + 1}`;
 
             const category = data.category || "Other";
             categories.add(category);
@@ -174,7 +174,6 @@ export const DashboardPage = () => {
     const q = query(
       collection(db, "users", user.uid, "transactions"),
       orderBy("date", "desc")
-      // , where("type", "==", "expense")
     );
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const data = snapshot.docs.map((doc) => ({
@@ -207,10 +206,9 @@ export const DashboardPage = () => {
               }}
               sx={{
                 ":hover": {
-                  boxShadow: 15, // theme.shadows[20]
+                  boxShadow: 15,
                   backgroundColor: "#1a237e",
                   color: "white",
-                  // color:"text.primary",
                 },
               }}
             >
@@ -222,7 +220,7 @@ export const DashboardPage = () => {
                   Total Balance
                 </Typography>
                 <Typography variant="h5" component="div">
-                {user?.currency + "."}{" "}
+                  {user?.currency + "."}{" "}
                   {new Intl.NumberFormat("en-IN").format(
                     totalIncome - totalExpense
                   )}
@@ -240,10 +238,9 @@ export const DashboardPage = () => {
               }}
               sx={{
                 ":hover": {
-                  boxShadow: 15, // theme.shadows[20]
+                  boxShadow: 15,
                   backgroundColor: "#1a237e",
                   color: "white",
-                  // color:"text.primary",
                 },
               }}
             >
@@ -255,7 +252,7 @@ export const DashboardPage = () => {
                   Total Income
                 </Typography>
                 <Typography variant="h5" component="div">
-                {user?.currency + "."}{" "}
+                  {user?.currency + "."}{" "}
                   {new Intl.NumberFormat("en-IN").format(
                     totalIncome ? totalIncome : 0
                   )}
@@ -273,10 +270,9 @@ export const DashboardPage = () => {
               }}
               sx={{
                 ":hover": {
-                  boxShadow: 15, // theme.shadows[20]
+                  boxShadow: 15,
                   backgroundColor: "#1a237e",
                   color: "white",
-                  // color:"text.primary",
                 },
               }}
             >
@@ -288,7 +284,7 @@ export const DashboardPage = () => {
                   Total Expense
                 </Typography>
                 <Typography variant="h5" component="div">
-                {user?.currency + "."}{" "}
+                  {user?.currency + "."}{" "}
                   {new Intl.NumberFormat("en-IN").format(
                     totalExpense ? totalExpense : 0
                   )}
@@ -306,10 +302,9 @@ export const DashboardPage = () => {
               }}
               sx={{
                 ":hover": {
-                  boxShadow: 15, // theme.shadows[20]
+                  boxShadow: 15,
                   backgroundColor: "#1a237e",
                   color: "white",
-                  // color:"text.primary",
                 },
               }}
             >
@@ -347,7 +342,7 @@ export const DashboardPage = () => {
                 options={{
                   title: "Income vs Expense",
                   legend: { position: "bottom" },
-                  pieHole: 0.5, // Donut chart effect
+                  pieHole: 0.5,
                   animation: { duration: 1000, easing: "out" },
                 }}
               />
@@ -379,6 +374,7 @@ export const DashboardPage = () => {
           </Grid>
         </Grid>
       </div>
+
       <div className="group-3">
         <Grid padding={2} container>
           <Grid item xs={12}>

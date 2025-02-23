@@ -420,13 +420,8 @@ function EnhancedTableToolbar(props) {
 
       const prevTransaction = transactionSnap.data();
 
-      // Reverse previous transaction impact (restore previous balances)
       await reversePreviousTransaction(prevTransaction);
-
-      // Apply updated transaction impact (update new balances)
       await applyNewTransaction(transactionData);
-
-      // Update the transaction document in Firestore
       await updateDoc(transactionRef, transactionData);
 
       message.success("Transaction updated successfully!");
@@ -439,40 +434,36 @@ function EnhancedTableToolbar(props) {
     }
   };
 
-  // Reverse previous transaction impact
   const reversePreviousTransaction = async (prevTransaction) => {
     if (!prevTransaction) return;
 
     const { type, mode, amount, fromAccount, toAccount } = prevTransaction;
 
     if (type === "Income") {
-      await updateAccountBalance(mode, -amount); // Subtract previous income
+      await updateAccountBalance(mode, -amount);
     } else if (type === "Expense") {
-      await updateAccountBalance(mode, amount); // Refund previous expense
+      await updateAccountBalance(mode, amount);
     } else if (type === "Transfer") {
-      await updateAccountBalance(fromAccount, amount); // Restore to source
-      await updateAccountBalance(toAccount, -amount); // Remove from destination
+      await updateAccountBalance(fromAccount, amount);
+      await updateAccountBalance(toAccount, -amount);
     }
   };
 
-  // Apply updated transaction impact
   const applyNewTransaction = async (transaction) => {
     const { type, mode, amount, fromAccount, toAccount } = transaction;
 
     if (type === "Income") {
-      await updateAccountBalance(mode, amount); // Add new income
+      await updateAccountBalance(mode, amount);
     } else if (type === "Expense") {
-      await updateAccountBalance(mode, -amount); // Deduct new expense
+      await updateAccountBalance(mode, -amount);
     } else if (type === "Transfer") {
-      await updateAccountBalance(fromAccount, -amount); // Deduct from new source
-      await updateAccountBalance(toAccount, amount); // Add to new destination
+      await updateAccountBalance(fromAccount, -amount);
+      await updateAccountBalance(toAccount, amount);
     }
   };
 
-  // Update account balance
   const updateAccountBalance = async (accountMode, amountChange) => {
     if (!accountMode) return;
-
     const accountQuery = query(
       collection(db, "users", user.uid, "transactions"),
       where("transMode", "==", accountMode),
@@ -483,12 +474,10 @@ function EnhancedTableToolbar(props) {
     if (!accountSnapshot.empty) {
       const accountDoc = accountSnapshot.docs[0];
       const newAmount = (accountDoc.data().amount || 0) + amountChange;
-
       await updateDoc(accountDoc.ref, { amount: newAmount });
     }
   };
 
-  // Chooses the proper handler based on mode (add vs. edit)
   const handleModalOk = async () => {
     if (isEditing) {
       await handleUpdate();
@@ -497,7 +486,6 @@ function EnhancedTableToolbar(props) {
     }
   };
 
-  // Pre-populates the correct form and opens the modal in edit mode
   const handleEdit = (transaction) => {
     setSelectedTransaction(transaction);
     setIsEditing(true);
@@ -540,7 +528,6 @@ function EnhancedTableToolbar(props) {
     setOpen(true);
   };
 
-  // Resets state and closes the modal
   const closeModal = () => {
     setOpen(false);
     setIsEditing(false);
@@ -593,7 +580,14 @@ function EnhancedTableToolbar(props) {
           </Tooltip>
 
           <Tooltip title="Delete">
-            <IconButton onClick={showDeleteConfirm}>
+            <IconButton
+              disabled={selected.length !== 1}
+              onClick={() =>
+                showDeleteConfirm(
+                  transactions.find((t) => t.id === selected[0])
+                )
+              }
+            >
               <DeleteIcon />
             </IconButton>
           </Tooltip>
@@ -626,7 +620,7 @@ function EnhancedTableToolbar(props) {
         confirmLoading={loading}
         okButtonProps={{
           disabled: loading,
-          style: { backgroundColor: "#1a237e" },
+          style: { backgroundColor: "#1a237e", color: "white" },
         }}
       >
         <Tabs activeKey={activeTab} onChange={setActiveTab}>

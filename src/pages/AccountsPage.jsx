@@ -4,17 +4,13 @@ import {
   Card,
   CardHeader,
   Grid,
-  IconButton,
   Typography,
 } from "@mui/material";
 import { blue, green, purple, red } from "@mui/material/colors";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
 import PaymentsIcon from "@mui/icons-material/Payments";
 import CreditCardIcon from "@mui/icons-material/CreditCard";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
-import Menu from "@mui/material/Menu";
-import MenuItem from "@mui/material/MenuItem";
-import React, { useContext, useEffect } from "react";
+import { useContext, useEffect } from "react";
 import { useState } from "react";
 import {
   DatePicker,
@@ -22,7 +18,6 @@ import {
   Input,
   InputNumber,
   Modal,
-  Radio,
   Select,
   message,
 } from "antd";
@@ -37,8 +32,6 @@ import {
 } from "../config/firebase";
 import { Timestamp } from "firebase/firestore";
 
-const options = ["Transfer Funds", "Add Money"];
-
 const getAccountStyle = (mode) => {
   switch (mode) {
     case "Debit Card":
@@ -50,28 +43,19 @@ const getAccountStyle = (mode) => {
     case "Cash":
       return { icon: <PaymentsIcon />, color: blue[900] };
     default:
-      return { icon: <PaymentsIcon />, color: blue[900] }; // Default case
+      return { icon: <PaymentsIcon />, color: blue[900] }; 
   }
 };
 
 export const AccountsPage = () => {
   const [accounts, setAccounts] = useState([]);
-  const [anchorEl, setAnchorEl] = React.useState(null);
-  const open = Boolean(anchorEl);
   const { user } = useContext(User);
   const [form] = Form.useForm();
   const [openModal, setOpenModal] = useState(false);
+  const [loading, setLoading] = useState(false);
   const resetForms = () => {
     form.resetFields();
   };
-
-  const handleClick = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
-  const handleClose = () => {
-    setAnchorEl(null);
-  };
-  const [loading, setLoading] = useState(false);
 
   const onCreate = async (values) => {
     const selectedDate = new Date(values.date);
@@ -80,7 +64,6 @@ export const AccountsPage = () => {
     try {
       await addDoc(collection(db, "users", user.uid, "transactions"), {
         title: values.title.toUpperCase(),
-        // mode: values.mode + "-"+ values.title.toUpperCase(),
         mode: values.mode,
         amount: values.amount,
         type: "Income",
@@ -144,7 +127,7 @@ export const AccountsPage = () => {
         confirmLoading={loading}
         okButtonProps={{
           disabled: loading,
-          style: { backgroundColor: "#1a237e" },
+          style: { backgroundColor: "#1a237e", color:"white" },
         }}
         destroyOnClose
         onOk={() => form.submit()}
@@ -204,42 +187,6 @@ export const AccountsPage = () => {
                       {icon}
                     </Avatar>
                   }
-                  // action={
-                  //   <>
-                  //     <IconButton
-                  //       aria-label="more"
-                  //       id="long-button"
-                  //       aria-controls={open ? "long-menu" : undefined}
-                  //       aria-expanded={open ? "true" : undefined}
-                  //       aria-haspopup="true"
-                  //       onClick={handleClick}
-                  //     >
-                  //       <MoreVertIcon />
-                  //     </IconButton>
-                  //     <Menu
-                  //       id="long-menu"
-                  //       MenuListProps={{
-                  //         "aria-labelledby": "long-button",
-                  //       }}
-                  //       anchorEl={anchorEl}
-                  //       open={open}
-                  //       onClose={handleClose}
-                  //       slotProps={{
-                  //         paper: {
-                  //           style: {
-                  //             width: "20ch",
-                  //           },
-                  //         },
-                  //       }}
-                  //     >
-                  //       {options.map((option) => (
-                  //         <MenuItem key={option} onClick={handleClose}>
-                  //           {option}
-                  //         </MenuItem>
-                  //       ))}
-                  //     </Menu>
-                  //   </>
-                  // }
                   title={
                     <>
                       <Typography sx={{ fontSize: 20 }}>
@@ -251,7 +198,7 @@ export const AccountsPage = () => {
                           account.title.toUpperCase()}
                       </Typography>
                       <Typography variant="h6" component="div">
-                      {user?.currency + "."}{" "}
+                        {user?.currency + "."}{" "}
                         {new Intl.NumberFormat("en-IN").format(account.amount)}
                       </Typography>
                     </>

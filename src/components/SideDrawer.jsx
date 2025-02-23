@@ -16,26 +16,15 @@ import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
-import { Avatar, Menu, MenuItem, Tooltip } from "@mui/material";
+import { Menu, MenuItem, Tooltip } from "@mui/material";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import SyncAltIcon from "@mui/icons-material/SyncAlt";
 import AccountBoxIcon from "@mui/icons-material/AccountBox";
-import { AccountCircle } from "@mui/icons-material";
-import {
-  auth,
-  signOut,
-  collection,
-  addDoc,
-  db,
-  serverTimestamp,
-  query,
-  doc,
-  getDocs,
-  updateDoc,
-  deleteDoc,
-  orderBy,
-} from "../config/firebase";
+import User from "../context/user";
+import { UserOutlined } from "@ant-design/icons";
+import { Avatar } from "antd";
+import { auth, signOut } from "../config/firebase";
 
 const drawerWidth = 240;
 
@@ -117,6 +106,7 @@ function SideDrawer({ children }) {
   };
 
   const logOut = () => signOut(auth);
+  const user = React.useContext(User).user;
 
   return (
     <Box sx={{ display: "flex" }}>
@@ -132,35 +122,47 @@ function SideDrawer({ children }) {
           >
             {open ? <ChevronLeftIcon /> : <ChevronRightIcon />}
           </IconButton>
-          <Typography variant="h6" noWrap component="div">
+          <Typography
+            variant="h6"
+            noWrap
+            component="div"
+            onClick={() => {
+              navigate("/dashboard");
+            }}
+            style={{ cursor: "pointer" }}
+          >
             Expense Tracker
           </Typography>
 
-          <Box sx={{ flexGrow: 1, display: "flex", justifyContent: "end" }}>
+          <Box
+            sx={{
+              flexGrow: 1,
+              display: "flex",
+              justifyContent: "end",
+              alignItems: "center",
+            }}
+          >
             <Tooltip title="Open settings">
-              <IconButton
-                size="large"
-                aria-label="account of current user"
-                aria-controls="menu-appbar"
-                aria-haspopup="true"
+              <Avatar
+                size={40}
+                style={{ cursor: "pointer", marginRight: 8 }}
                 onClick={handleMenu}
-                color="inherit"
-                variant="square"
-              >
-                <AccountCircle />
-              </IconButton>
+                src={user?.avatar}
+                icon={<UserOutlined />}
+              />
             </Tooltip>
+              {user.username}
             <Menu
               id="menu-appbar"
               anchorEl={anchorEl}
               anchorOrigin={{
-                vertical: "top",
+                vertical: "bottom",
                 horizontal: "right",
               }}
               keepMounted
               transformOrigin={{
                 vertical: "top",
-                horizontal: "right",
+                horizontal: "left",
               }}
               open={Boolean(anchorEl)}
               onClose={handleClose}
@@ -242,8 +244,6 @@ function SideDrawer({ children }) {
             easing: theme.transitions.easing.sharp,
             duration: theme.transitions.duration.enteringScreen,
           }),
-          // marginLeft: open ? `${drawerWidth}px` : `calc(${theme.spacing(7)} + 1px)`,
-          // width: `calc(100% - ${open ? drawerWidth : `calc(${theme.spacing(7)} + 1px)`})`,
         }}
       >
         {children}

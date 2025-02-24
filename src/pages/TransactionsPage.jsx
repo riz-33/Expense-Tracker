@@ -52,7 +52,7 @@ import {
   getDoc,
 } from "../config/firebase";
 import { Timestamp } from "firebase/firestore";
-import User from "../context/user";
+import User from "../context/user"
 const { TextArea } = Input;
 const { TabPane } = Tabs;
 

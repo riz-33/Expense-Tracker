@@ -21,7 +21,6 @@ import {
   Select,
   message,
 } from "antd";
-import User from "../context/user";
 import {
   collection,
   db,
@@ -31,6 +30,7 @@ import {
   onSnapshot,
 } from "../config/firebase";
 import { Timestamp } from "firebase/firestore";
+import User from "../context/user.jsx"
 
 const getAccountStyle = (mode) => {
   switch (mode) {

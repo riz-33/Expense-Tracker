@@ -14,9 +14,9 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
-import User from "../context/user";
 import { useContext, useEffect, useState } from "react";
 import { collection, db, query, orderBy, onSnapshot } from "../config/firebase";
+import User from "../context/user"
 
 const columns = [
   { id: "date", label: "Date", minWidth: 170 },

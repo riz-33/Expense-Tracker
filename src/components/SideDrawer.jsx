@@ -21,10 +21,10 @@ import DashboardIcon from "@mui/icons-material/Dashboard";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import SyncAltIcon from "@mui/icons-material/SyncAlt";
 import AccountBoxIcon from "@mui/icons-material/AccountBox";
-import User from "../context/user";
 import { UserOutlined } from "@ant-design/icons";
 import { Avatar } from "antd";
 import { auth, signOut } from "../config/firebase";
+import User from "../context/user"
 
 const drawerWidth = 240;
 

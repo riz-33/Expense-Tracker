@@ -1,6 +1,6 @@
 import "./App.css";
 import AppRouter from "./config/router";
-import User from "./context/user";
+import User from "./context/User"
 import { useState, useEffect } from "react";
 import { auth, getDoc, onAuthStateChanged, db, doc } from "./config/firebase";
 

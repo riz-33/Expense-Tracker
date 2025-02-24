@@ -1,4 +1,4 @@
-import User from "././context/user"
+import User from "././components/user"
 import "./App.css";
 import AppRouter from "./config/router";
 import { useState, useEffect } from "react";

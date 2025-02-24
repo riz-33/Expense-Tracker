@@ -16,7 +16,8 @@ import {
 } from "@mui/material";
 import { useContext, useEffect, useState } from "react";
 import { collection, db, query, orderBy, onSnapshot } from "../config/firebase";
-import User from "../context/user"
+import User from "../components/user";
+
 
 const columns = [
   { id: "date", label: "Date", minWidth: 170 },

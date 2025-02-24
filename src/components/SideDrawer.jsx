@@ -24,7 +24,7 @@ import AccountBoxIcon from "@mui/icons-material/AccountBox";
 import { UserOutlined } from "@ant-design/icons";
 import { Avatar } from "antd";
 import { auth, signOut } from "../config/firebase";
-import User from "../context/user"
+import User from "./user";
 
 const drawerWidth = 240;
 

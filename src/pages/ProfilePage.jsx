@@ -13,7 +13,7 @@ import {
   Space,
   Upload,
 } from "antd";
-import User from "../context/user"
+import User from "../components/user";
 import { UserOutlined } from "@ant-design/icons";
 import { useContext, useEffect, useState } from "react";
 import { doc, db, updateDoc, onSnapshot } from "../config/firebase";

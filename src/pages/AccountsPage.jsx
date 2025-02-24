@@ -30,7 +30,7 @@ import {
   onSnapshot,
 } from "../config/firebase";
 import { Timestamp } from "firebase/firestore";
-import User from "../context/user.jsx"
+import User from "../components/user";
 
 const getAccountStyle = (mode) => {
   switch (mode) {
